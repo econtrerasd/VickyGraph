@@ -1,0 +1,2225 @@
+###############################################################################
+#                                                                             #
+# Calypsi linker for 65816                                      version 3.6.2 #
+#                                                       16/Jul/2022  23:32:15 #
+# Command line: --output-format=pgz --list-file=spredit-Foenix.lst            #
+#               --cross-reference --rtattr printf=float --rtattr              #
+#               cstartup=Foenix --verbose --copy-initialize palette0 -o       #
+#               grfdemo.pgz obj/main.o obj/vickyGraph.o                       #
+#               module/Calypsi-65816-Foenix/Foenix-lc-sd.a                    #
+#               module/Calypsi-65816-Foenix/linker-files/Foenix-U+.scm        #
+#               clib-lc-sd-Foenix.a                                           #
+#                                                                             #
+###############################################################################
+
+####################
+#                  #
+# Memories summary #
+#                  #
+####################
+
+Name       Range         Size    Used    Checksum  Largest unallocated
+----------------------------------------------------------------------
+DirectPage 002000-0020ff 000100    9.0%  none      0000e9
+LoRAM      002100-006fff 004f00   24.0%  none      003c08
+LoCODE     007000-007fff 001000   15.9%  none      000d75
+Vector     00fff0-00ffff 000010    0.0%  none      000010
+near-bank  010000-01ffff 010000    0.0%  none      010000
+bank02     020000-02ffff 010000    0.0%  none      010000
+bank03     030000-03ffff 010000    1.6%  none      00fbf2
+bank#x04   040000-04ffff 010000   29.6%  none      00b441
+bank#x05   050000-05ffff 010000    0.0%  none      010000
+bank#x06   060000-06ffff 010000    0.0%  none      010000
+bank#x07   070000-07ffff 010000    0.0%  none      010000
+bank#x08   080000-08ffff 010000    0.0%  none      010000
+bank#x09   090000-09ffff 010000    0.0%  none      010000
+bank#x0a   0a0000-0affff 010000    0.0%  none      010000
+bank#x0b   0b0000-0bffff 010000    0.0%  none      010000
+bank#x0c   0c0000-0cffff 010000    0.0%  none      010000
+bank#x0d   0d0000-0dffff 010000    0.0%  none      010000
+bank#x0e   0e0000-0effff 010000    0.0%  none      010000
+bank#x0f   0f0000-0fffff 010000    0.0%  none      010000
+bank#x10   100000-10ffff 010000    0.0%  none      010000
+bank#x11   110000-11ffff 010000    0.0%  none      010000
+bank#x12   120000-12ffff 010000    0.0%  none      010000
+bank#x13   130000-13ffff 010000    0.0%  none      010000
+bank#x14   140000-14ffff 010000    0.0%  none      010000
+bank#x15   150000-15ffff 010000    0.0%  none      010000
+bank#x16   160000-16ffff 010000    0.0%  none      010000
+bank#x17   170000-17ffff 010000    0.0%  none      010000
+bank#x18   180000-18ffff 010000    0.0%  none      010000
+bank#x19   190000-19ffff 010000    0.0%  none      010000
+bank#x1a   1a0000-1affff 010000    0.0%  none      010000
+bank#x1b   1b0000-1bffff 010000    0.0%  none      010000
+bank#x1c   1c0000-1cffff 010000    0.0%  none      010000
+bank#x1d   1d0000-1dffff 010000    0.0%  none      010000
+bank#x1e   1e0000-1effff 010000    0.0%  none      010000
+bank#x1f   1f0000-1fffff 010000    0.0%  none      010000
+bank#x20   200000-20ffff 010000    0.0%  none      010000
+bank#x21   210000-21ffff 010000    0.0%  none      010000
+bank#x22   220000-22ffff 010000    0.0%  none      010000
+bank#x23   230000-23ffff 010000    0.0%  none      010000
+bank#x24   240000-24ffff 010000    0.0%  none      010000
+bank#x25   250000-25ffff 010000    0.0%  none      010000
+bank#x26   260000-26ffff 010000    0.0%  none      010000
+bank#x27   270000-27ffff 010000    0.0%  none      010000
+bank#x28   280000-28ffff 010000    0.0%  none      010000
+bank#x29   290000-29ffff 010000    0.0%  none      010000
+bank#x2a   2a0000-2affff 010000    0.0%  none      010000
+bank#x2b   2b0000-2bffff 010000    0.0%  none      010000
+bank#x2c   2c0000-2cffff 010000    0.0%  none      010000
+bank#x2d   2d0000-2dffff 010000    0.0%  none      010000
+bank#x2e   2e0000-2effff 010000    0.0%  none      010000
+bank#x2f   2f0000-2fffff 010000    0.0%  none      010000
+bank#x30   300000-30ffff 010000    0.0%  none      010000
+bank#x31   310000-31ffff 010000    0.0%  none      010000
+bank#x32   320000-32ffff 010000    0.0%  none      010000
+bank#x33   330000-33ffff 010000    0.0%  none      010000
+bank#x34   340000-34ffff 010000    0.0%  none      010000
+bank#x35   350000-35ffff 010000    0.0%  none      010000
+bank#x36   360000-36ffff 010000    0.0%  none      010000
+bank#x37   370000-37ffff 010000    0.0%  none      010000
+bank#x38   380000-38ffff 010000    0.0%  none      010000
+bank#x39   390000-39ffff 010000    0.0%  none      010000
+bank#x3a   3a0000-3affff 010000    0.0%  none      010000
+bank#x3b   3b0000-3bffff 010000    0.0%  none      010000
+bank#x3c   3c0000-3cffff 010000    0.0%  none      010000
+bank#x3d   3d0000-3dffff 010000    0.0%  none      010000
+bank#x3e   3e0000-3effff 010000    0.0%  none      010000
+bank#x3f   3f0000-3fffff 010000    0.0%  none      010000
+palettes   af2000-af3fff 002000   12.5%  none      001c00
+vram       b00000-cfffff 200000    0.0%  none      200000
+
+
+####################
+#                  #
+# Sections summary #
+#                  #
+####################
+
+Name            Range          Size    Memory     Fragments
+-----------------------------------------------------------
+registers       002000-002016  000017  DirectPage 2
+heap            002100-0030ff  001000  LoRAM      1
+zdata           003100-0033e9  0002ea  LoRAM      12
+data            0033ea-0033f7  00000e  LoRAM      3
+cdata           007000-00704e  00004f  LoCODE     1
+code            00704f-007082  000034  LoCODE     4
+cdata           007083-007100  00007e  LoCODE     4
+data_init_table 007101-00711e  00001e  LoCODE     1
+cdata           00711f-007190  000072  LoCODE     4
+switch          007191-0071c0  000030  LoCODE     2
+cdata           0071c1-007266  0000a6  LoCODE     12
+switch          007267-00726e  000008  LoCODE     1
+cdata           00726f-007275  000007  LoCODE     1
+code            007276-00727a  000005  LoCODE     1
+cdata           00727b-007287  00000d  LoCODE     3
+code            007288-00728a  000003  LoCODE     1
+ipalette0       030000-0303ff  000400  bank03     1
+idata           030400-03040d  00000e  bank03     3
+farcode         040000-044bbe  004bbf  bank#x04   165
+palette0        af2000-af23ff  000400  palettes   1
+
+
+################
+#              #
+# Object files #
+#              #
+################
+
+Unit Filename               Archive
+-----------------------------------------------
+  0  obj/main.o             -
+          >  cdata   000065
+          >  farcode 0001ad
+  1  obj/vickyGraph.o       -
+          >  cdata     000121
+          >  farcode   002258
+          >  ipalette0 000400
+          >  palette0  000400
+          >  switch    000008
+          >  zdata     000214
+  5  Foenix-startup-lc-sd.o Foenix-lc-sd.a
+          # picked based on cstartup=Foenix
+          >  code    000034
+          >  farcode 000001
+          >  zdata   000002
+  6  pseudoRegisters.o      clib-lc-sd-Foenix.a
+          >  registers 000014
+  7  exit.o                 clib-lc-sd-Foenix.a
+          # picked based on exit=stdexit
+          >  farcode 000049
+          >  zdata   000080
+  9  controlFlow.o          clib-lc-sd-Foenix.a
+          >  farcode 00000e
+ 10  exitC99.o              clib-lc-sd-Foenix.a
+          >  farcode 00002b
+          >  zdata   000004
+ 13  stub_exit-lc-sd.o      Foenix-lc-sd.a
+          >  code 000005
+ 14  lib_printf.o           clib-lc-sd-Foenix.a
+          >  farcode 00001b
+ 15  lib_vfprintf.o         clib-lc-sd-Foenix.a
+          >  farcode 000043
+ 16  __vsprintf_float.o     clib-lc-sd-Foenix.a
+          # picked based on printf=float
+          >  cdata   00000f
+          >  farcode 0015a1
+          >  switch  000030
+ 20  lib_strnlen.o          clib-lc-sd-Foenix.a
+          >  farcode 000031
+ 21  vswitch16.o            clib-lc-sd-Foenix.a
+          >  farcode 000088
+ 22  lib_dtoa_engine.o      clib-lc-sd-Foenix.a
+          >  cdata   000010
+          >  farcode 000489
+ 23  float32.o              clib-lc-sd-Foenix.a
+          >  farcode 0002b0
+ 24  lib_dtoa_data.o        clib-lc-sd-Foenix.a
+          >  cdata 00004c
+ 25  integer.o              clib-lc-sd-Foenix.a
+          >  farcode 0000ed
+ 26  lib_stdoutstream.o     clib-lc-sd-Foenix.a
+          >  farcode 000091
+ 27  lib_libnoflush.o       clib-lc-sd-Foenix.a
+          >  farcode 000004
+ 28  errno.o                clib-lc-sd-Foenix.a
+          >  zdata 000002
+ 29  lib_fputc.o            clib-lc-sd-Foenix.a
+          >  farcode 000066
+ 30  lib_libfflush.o        clib-lc-sd-Foenix.a
+          >  farcode 000120
+ 32  stub_write-lc-sd.o     Foenix-lc-sd.a
+          >  farcode 00005e
+ 34  stub_putchar-lc-sd.o   Foenix-lc-sd.a
+          >  farcode 000008
+ 35  lib_libfwrite.o        clib-lc-sd-Foenix.a
+          >  farcode 000142
+ 36  lib_rdflush.o          clib-lc-sd-Foenix.a
+          >  farcode 000075
+ 37  lib_fseek.o            clib-lc-sd-Foenix.a
+          >  farcode 00005c
+ 39  stub_lseek-lc-sd.o     Foenix-lc-sd.a
+          >  farcode 000007
+ 40  lib_wrflush.o          clib-lc-sd-Foenix.a
+          >  farcode 00001f
+ 41  streamlist.o           clib-lc-sd-Foenix.a
+          >  farcode 000081
+          >  zdata   00004e
+ 43  stub_close-lc-sd.o     Foenix-lc-sd.a
+          >  farcode 000004
+ 44  rand.o                 clib-lc-sd-Foenix.a
+          >  farcode 00000d
+ 45  srand48.o              clib-lc-sd-Foenix.a
+          >  farcode 00002d
+ 46  _rand48.o              clib-lc-sd-Foenix.a
+          >  data    00000e
+          >  farcode 0000ec
+          >  idata   00000e
+ 47  lrand48.o              clib-lc-sd-Foenix.a
+          >  farcode 000031
+ 48  time.o                 clib-lc-sd-Foenix.a
+          >  cdata   000008
+          >  farcode 00001b
+ 57  vdma_wait-lc-sd.o      Foenix-lc-sd.a
+          >  farcode 000015
+ 58  dma-lc-sd.o            Foenix-lc-sd.a
+          >  code 000003
+ 59  spill.o                clib-lc-sd-Foenix.a
+          >  farcode   00005d
+          >  registers 000003
+ 60  lib_abs.o              clib-lc-sd-Foenix.a
+          >  farcode 000012
+ 62  initialize.o           clib-lc-sd-Foenix.a
+          >  farcode 000088
+ 63  memset_far.o           clib-lc-sd-Foenix.a
+          >  farcode 00004d
+ 64  memcpy_far.o           clib-lc-sd-Foenix.a
+          >  farcode 00004f
+
+###################
+#                 #
+# Cross reference #
+#                 #
+###################
+
+_Dp in section 'registers'  placed at address 002000-002013 of size 000014
+(pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+    Defines:
+        _Vfp = 002010
+        _Dp = 002000
+    Referenced from:
+        main (obj/main.o unit 0 section index 2)
+        setupScreen (obj/main.o unit 0 section index 3)
+        delay (obj/main.o unit 0 section index 5)
+        (obj/main.o unit 0 section index 6)
+        (obj/main.o unit 0 section index 7)
+        ANSILocate (obj/vickyGraph.o unit 1 section index 10)
+        ANSIScrSize (obj/vickyGraph.o unit 1 section index 12)
+        vickyVideomode (obj/vickyGraph.o unit 1 section index 13)
+        vickyBitmap (obj/vickyGraph.o unit 1 section index 14)
+        read_vram_buffer (obj/vickyGraph.o unit 1 section index 17)
+        getPixel (obj/vickyGraph.o unit 1 section index 18)
+        getScanLine (obj/vickyGraph.o unit 1 section index 19)
+        (obj/vickyGraph.o unit 1 section index 20)
+        plot (obj/vickyGraph.o unit 1 section index 21)
+        vram2dram_linearCopy (obj/vickyGraph.o unit 1 section index 23)
+        plot_rectangle (obj/vickyGraph.o unit 1 section index 24)
+        plot_solid_rectangle (obj/vickyGraph.o unit 1 section index 25)
+        plot_bezier (obj/vickyGraph.o unit 1 section index 26)
+        pow (obj/vickyGraph.o unit 1 section index 27)
+        plot_line (obj/vickyGraph.o unit 1 section index 28)
+        plot_circle (obj/vickyGraph.o unit 1 section index 29)
+        plot_ellipse (obj/vickyGraph.o unit 1 section index 30)
+        plot_solid_ellipse (obj/vickyGraph.o unit 1 section index 31)
+        plot_solid_circle (obj/vickyGraph.o unit 1 section index 32)
+        stackPeek (obj/vickyGraph.o unit 1 section index 35)
+        stackPop (obj/vickyGraph.o unit 1 section index 36)
+        stackPush (obj/vickyGraph.o unit 1 section index 37)
+        floodFill (obj/vickyGraph.o unit 1 section index 38)
+        (obj/vickyGraph.o unit 1 section index 39)
+        (obj/vickyGraph.o unit 1 section index 40)
+        (obj/vickyGraph.o unit 1 section index 41)
+        (obj/vickyGraph.o unit 1 section index 42)
+        (obj/vickyGraph.o unit 1 section index 43)
+        (obj/vickyGraph.o unit 1 section index 44)
+        (obj/vickyGraph.o unit 1 section index 45)
+        (obj/vickyGraph.o unit 1 section index 46)
+        (obj/vickyGraph.o unit 1 section index 47)
+        (obj/vickyGraph.o unit 1 section index 48)
+        (obj/vickyGraph.o unit 1 section index 50)
+        (obj/vickyGraph.o unit 1 section index 51)
+        (obj/vickyGraph.o unit 1 section index 52)
+        (obj/vickyGraph.o unit 1 section index 53)
+        (obj/vickyGraph.o unit 1 section index 54)
+        (obj/vickyGraph.o unit 1 section index 55)
+        (obj/vickyGraph.o unit 1 section index 57)
+        (obj/vickyGraph.o unit 1 section index 58)
+        (obj/vickyGraph.o unit 1 section index 60)
+        (obj/vickyGraph.o unit 1 section index 61)
+        (obj/vickyGraph.o unit 1 section index 62)
+        (obj/vickyGraph.o unit 1 section index 63)
+        (obj/vickyGraph.o unit 1 section index 65)
+        (obj/vickyGraph.o unit 1 section index 68)
+        (obj/vickyGraph.o unit 1 section index 69)
+        (obj/vickyGraph.o unit 1 section index 72)
+        (obj/vickyGraph.o unit 1 section index 73)
+        (obj/vickyGraph.o unit 1 section index 78)
+        (obj/vickyGraph.o unit 1 section index 79)
+        (obj/vickyGraph.o unit 1 section index 80)
+        (obj/vickyGraph.o unit 1 section index 82)
+        (obj/vickyGraph.o unit 1 section index 84)
+        (obj/vickyGraph.o unit 1 section index 85)
+        (obj/vickyGraph.o unit 1 section index 86)
+        (obj/vickyGraph.o unit 1 section index 87)
+        (obj/vickyGraph.o unit 1 section index 88)
+        (obj/vickyGraph.o unit 1 section index 89)
+        (obj/vickyGraph.o unit 1 section index 90)
+        (obj/vickyGraph.o unit 1 section index 91)
+        (obj/vickyGraph.o unit 1 section index 92)
+        (obj/vickyGraph.o unit 1 section index 94)
+        (obj/vickyGraph.o unit 1 section index 95)
+        (obj/vickyGraph.o unit 1 section index 96)
+        (obj/vickyGraph.o unit 1 section index 98)
+        __program_root_section (Foenix-startup-lc-sd.o (from Foenix-lc-sd.a) unit 5 section index 2)
+        __data_initialization_needed (Foenix-startup-lc-sd.o (from Foenix-lc-sd.a) unit 5 section index 3)
+        exit (exit.o (from clib-lc-sd-Foenix.a) unit 7 section index 3)
+        _JmpIndLong (controlFlow.o (from clib-lc-sd-Foenix.a) unit 9 section index 3)
+        _Exit (exitC99.o (from clib-lc-sd-Foenix.a) unit 10 section index 3)
+        printf (lib_printf.o (from clib-lc-sd-Foenix.a) unit 14 section index 2)
+        vfprintf (lib_vfprintf.o (from clib-lc-sd-Foenix.a) unit 15 section index 2)
+        __ultoa_invert (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 5)
+        __vsprintf (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 6)
+        (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 7)
+        (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 8)
+        (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 9)
+        (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 10)
+        (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 11)
+        (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 12)
+        strnlen (lib_strnlen.o (from clib-lc-sd-Foenix.a) unit 20 section index 2)
+        _ValueSwitch16 (vswitch16.o (from clib-lc-sd-Foenix.a) unit 21 section index 2)
+        __dtoa_engine (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 2)
+        (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 3)
+        (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 4)
+        (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 5)
+        (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 6)
+        (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 7)
+        (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 8)
+        _Float32EQ (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 2)
+        _Float32LT (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 3)
+        (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 4)
+        _Float32GE (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 5)
+        _UInt32ToFloat32 (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 7)
+        _Float32ToUInt64 (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 13)
+        (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 15)
+        _Float32Add (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+        _Mul32 (integer.o (from clib-lc-sd-Foenix.a) unit 25 section index 3)
+        _DivModSign32 (integer.o (from clib-lc-sd-Foenix.a) unit 25 section index 14)
+        _UDiv64 (integer.o (from clib-lc-sd-Foenix.a) unit 25 section index 15)
+        (lib_stdoutstream.o (from clib-lc-sd-Foenix.a) unit 26 section index 2)
+        (lib_stdoutstream.o (from clib-lc-sd-Foenix.a) unit 26 section index 3)
+        __lib_stdoutstream (lib_stdoutstream.o (from clib-lc-sd-Foenix.a) unit 26 section index 4)
+        fputc (lib_fputc.o (from clib-lc-sd-Foenix.a) unit 29 section index 2)
+        __lib_fflush (lib_libfflush.o (from clib-lc-sd-Foenix.a) unit 30 section index 2)
+        _Stub_write (stub_write-lc-sd.o (from Foenix-lc-sd.a) unit 32 section index 2)
+        __lib_fwrite (lib_libfwrite.o (from clib-lc-sd-Foenix.a) unit 35 section index 2)
+        __lib_rdflush (lib_rdflush.o (from clib-lc-sd-Foenix.a) unit 36 section index 2)
+        fseek (lib_fseek.o (from clib-lc-sd-Foenix.a) unit 37 section index 2)
+        __lib_wrflush (lib_wrflush.o (from clib-lc-sd-Foenix.a) unit 40 section index 2)
+        __srand48 (srand48.o (from clib-lc-sd-Foenix.a) unit 45 section index 2)
+        __dorand48 (_rand48.o (from clib-lc-sd-Foenix.a) unit 46 section index 2)
+        (_rand48.o (from clib-lc-sd-Foenix.a) unit 46 section index 3)
+        __lrand48 (lrand48.o (from clib-lc-sd-Foenix.a) unit 47 section index 2)
+        abs (lib_abs.o (from clib-lc-sd-Foenix.a) unit 60 section index 2)
+        __initialize_sections (initialize.o (from clib-lc-sd-Foenix.a) unit 62 section index 2)
+        __memset_far (memset_far.o (from clib-lc-sd-Foenix.a) unit 63 section index 2)
+        __memcpy_far (memcpy_far.o (from clib-lc-sd-Foenix.a) unit 64 section index 2)
+
+_FillInd in section 'registers'  placed at address 002014-002016 of size 000003
+(spill.o (from clib-lc-sd-Foenix.a) unit 59 section index 2)
+
+`_StringLiteral_[78,111,116,32,101,110,111,117,103,104,32,109,101,109,111,114,121,32,97,116,32,97,100,100,114,101,115,115,32,37,108,120,32,102,111,114,32,97,32,100,37,32,98,121,32,100,37,32,115,99,114,101,101,110,33,44,32,37,120,108,32,98,121,116,101,115,32,114,101,113,117,105,114,101,100,46,10,13]` in section 'cdata'
+ placed at address 007000-00704e of size 00004f
+(obj/vickyGraph.o unit 1 section index 106)
+    Defines:
+        `_StringLiteral_[78,111,116,32,101,110,111,117,103,104,32,109,101,109,111,114,121,32,97,116,32,97,100,100,114,101,115,115,32,37,108,120,32,102,111,114,32,97,32,100,37,32,98,121,32,100,37,32,115,99,114,101,101,110,33,44,32,37,120,108,32,98,121,116,101,115,32,114,101,113,117,105,114,101,100,46,10,13]` = 007000
+    Referenced from:
+        vickyBitmap (obj/vickyGraph.o unit 1 section index 14)
+
+__program_start in section 'code'
+ placed at address 00704f-007063 of size 000015
+(Foenix-startup-lc-sd.o (from Foenix-lc-sd.a) unit 5 section index 2)
+    Defines:
+        __program_start = 00704f
+        __program_root_section = 00704f
+    References:
+        _DirectPageStart
+        _Vfp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        __low_level_init in (Foenix-startup-lc-sd.o (from Foenix-lc-sd.a) unit 5 section index 7)
+
+__data_initialization_needed in section 'code'
+ placed at address 007064-007073 of size 000010
+(Foenix-startup-lc-sd.o (from Foenix-lc-sd.a) unit 5 section index 3)
+    Defines:
+        __data_initialization_needed = 007064
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _InitialStack in (Foenix-startup-lc-sd.o (from Foenix-lc-sd.a) unit 5 section index 8)
+        .sectionEnd(data_init_table)
+        .sectionStart(data_init_table)
+        __initialize_sections in (initialize.o (from clib-lc-sd-Foenix.a) unit 62 section index 2)
+
+__call_initialize_global_streams in section 'code'
+ placed at address 007074-007077 of size 000004
+(Foenix-startup-lc-sd.o (from Foenix-lc-sd.a) unit 5 section index 4)
+    Defines:
+        __call_initialize_global_streams = 007074
+    References:
+        __initialize_global_streams in (streamlist.o (from clib-lc-sd-Foenix.a) unit 41 section index 3)
+
+Section 'code'  placed at address 007078-007082 of size 00000b
+(Foenix-startup-lc-sd.o (from Foenix-lc-sd.a) unit 5 section index 6)
+    References:
+        exit in (exit.o (from clib-lc-sd-Foenix.a) unit 7 section index 3)
+        main in (obj/main.o unit 0 section index 2)
+
+`_StringLiteral_Error %d while setting VideoMode` in section 'cdata'
+ placed at address 007083-0070a3 of size 000021
+(obj/main.o unit 0 section index 8)
+    Defines:
+        `_StringLiteral_Error %d while setting VideoMode` = 007083
+    Referenced from:
+        setupScreen (obj/main.o unit 0 section index 3)
+
+`_StringLiteral_[86,82,65,77,32,100,101,116,101,99,116,101,100,58,32,48,120,98,48,48,48,48,48,32,45,32,37,108,120,10,13]` in section 'cdata'
+ placed at address 0070a4-0070c3 of size 000020
+(obj/vickyGraph.o unit 1 section index 107)
+    Defines:
+        `_StringLiteral_[86,82,65,77,32,100,101,116,101,99,116,101,100,58,32,48,120,98,48,48,48,48,48,32,45,32,37,108,120,10,13]` = 0070a4
+    Referenced from:
+        vickyBitmap (obj/vickyGraph.o unit 1 section index 14)
+
+`_StringLiteral_[103,114,97,112,104,105,99,115,32,109,111,100,101,32,37,100,32,120,58,37,108,100,32,121,58,37,108,100,10,13]` in section 'cdata'
+ placed at address 0070c4-0070e2 of size 00001f
+(obj/vickyGraph.o unit 1 section index 109)
+    Defines:
+        `_StringLiteral_[103,114,97,112,104,105,99,115,32,109,111,100,101,32,37,100,32,120,58,37,108,100,32,121,58,37,108,100,10,13]` = 0070c4
+    Referenced from:
+        vickyVideomode (obj/vickyGraph.o unit 1 section index 13)
+
+`_StringLiteral_Error %d while setting bitmap` in section 'cdata'
+ placed at address 0070e3-007100 of size 00001e
+(obj/main.o unit 0 section index 9)
+    Defines:
+        `_StringLiteral_Error %d while setting bitmap` = 0070e3
+    Referenced from:
+        setupScreen (obj/main.o unit 0 section index 3)
+
+Section 'data_init_table'  placed at address 007101-00711e of size 00001e
+(linker generated)
+
+`_StringLiteral_[115,111,117,114,99,101,58,32,37,120,32,100,101,115,116,58,32,37,120,32,108,101,110,58,37,108,100,13]` in section 'cdata'
+ placed at address 00711f-00713b of size 00001d
+(obj/vickyGraph.o unit 1 section index 110)
+    Defines:
+        `_StringLiteral_[115,111,117,114,99,101,58,32,37,120,32,100,101,115,116,58,32,37,120,32,108,101,110,58,37,108,100,13]` = 00711f
+    Referenced from:
+        vram2dram_linearCopy (obj/vickyGraph.o unit 1 section index 23)
+
+`_StringLiteral_[84,104,120,32,102,111,114,32,119,97,116,99,104,105,110,103,32,116,104,105,115,32,100,101,109,111,10,13]` in section 'cdata'
+ placed at address 00713c-007158 of size 00001d
+(obj/main.o unit 0 section index 10)
+    Defines:
+        `_StringLiteral_[84,104,120,32,102,111,114,32,119,97,116,99,104,105,110,103,32,116,104,105,115,32,100,101,109,111,10,13]` = 00713c
+    Referenced from:
+        main (obj/main.o unit 0 section index 2)
+
+g_dtoa_round in section 'cdata'  placed at address 007159-007174 of size 00001c
+(lib_dtoa_data.o (from clib-lc-sd-Foenix.a) unit 24 section index 4)
+    Defines:
+        g_dtoa_round = 007159
+    Referenced from:
+        __dtoa_engine (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 2)
+
+`_StringLiteral_Bitmap page must be 0 or 1!` in section 'cdata'
+ placed at address 007175-007190 of size 00001c
+(obj/vickyGraph.o unit 1 section index 103)
+    Defines:
+        `_StringLiteral_Bitmap page must be 0 or 1!` = 007175
+    Referenced from:
+        vickyBitmap (obj/vickyGraph.o unit 1 section index 14)
+
+`?L450` in section 'switch'  placed at address 007191-0071a8 of size 000018
+(__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 16)
+    References:
+        __vsprintf in (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 6)
+
+`?L403` in section 'switch'  placed at address 0071a9-0071c0 of size 000018
+(__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 15)
+    References:
+        __vsprintf in (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 6)
+
+g_dtoa_scale_down in section 'cdata'
+ placed at address 0071c1-0071d8 of size 000018
+(lib_dtoa_data.o (from clib-lc-sd-Foenix.a) unit 24 section index 3)
+    Defines:
+        g_dtoa_scale_down = 0071c1
+    Referenced from:
+        __dtoa_engine (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 2)
+
+g_dtoa_scale_up in section 'cdata'
+ placed at address 0071d9-0071f0 of size 000018
+(lib_dtoa_data.o (from clib-lc-sd-Foenix.a) unit 24 section index 2)
+    Defines:
+        g_dtoa_scale_up = 0071d9
+    Referenced from:
+        __dtoa_engine (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 2)
+
+`_StringLiteral_[77,101,109,111,114,121,32,100,101,116,101,99,116,101,100,58,32,37,108,120,32,10,13]` in section 'cdata'
+ placed at address 0071f1-007208 of size 000018
+(obj/vickyGraph.o unit 1 section index 105)
+    Defines:
+        `_StringLiteral_[77,101,109,111,114,121,32,100,101,116,101,99,116,101,100,58,32,37,108,120,32,10,13]` = 0071f1
+    Referenced from:
+        vickyVideomode (obj/vickyGraph.o unit 1 section index 13)
+
+`_StringLiteral_[88,102,101,114,32,105,110,105,116,105,116,97,116,101,100,13]` in section 'cdata'
+ placed at address 007209-007219 of size 000011
+(obj/vickyGraph.o unit 1 section index 108)
+    Defines:
+        `_StringLiteral_[88,102,101,114,32,105,110,105,116,105,116,97,116,101,100,13]` = 007209
+    Referenced from:
+        vram2dram_linearCopy (obj/vickyGraph.o unit 1 section index 23)
+
+`_StringLiteral_[27,101,91,56,59,37,100,44,37,100,59,49,72]` in section 'cdata'
+ placed at address 00721a-007227 of size 00000e
+(obj/vickyGraph.o unit 1 section index 102)
+    Defines:
+        `_StringLiteral_[27,101,91,56,59,37,100,44,37,100,59,49,72]` = 00721a
+    Referenced from:
+        ANSIScrSize (obj/vickyGraph.o unit 1 section index 12)
+
+`_StringLiteral_[119,97,105,116,105,110,103,46,46,13]` in section 'cdata'
+ placed at address 007228-007232 of size 00000b
+(obj/vickyGraph.o unit 1 section index 111)
+    Defines:
+        `_StringLiteral_[119,97,105,116,105,110,103,46,46,13]` = 007228
+    Referenced from:
+        vram2dram_linearCopy (obj/vickyGraph.o unit 1 section index 23)
+
+`_StringLiteral_[70,105,110,105,115,104,46,46,13]` in section 'cdata'
+ placed at address 007233-00723c of size 00000a
+(obj/vickyGraph.o unit 1 section index 104)
+    Defines:
+        `_StringLiteral_[70,105,110,105,115,104,46,46,13]` = 007233
+    Referenced from:
+        vram2dram_linearCopy (obj/vickyGraph.o unit 1 section index 23)
+
+`_StringLiteral_[27,91,37,100,59,37,100,72]` in section 'cdata'
+ placed at address 00723d-007245 of size 000009
+(obj/vickyGraph.o unit 1 section index 100)
+    Defines:
+        `_StringLiteral_[27,91,37,100,59,37,100,72]` = 00723d
+    Referenced from:
+        ANSILocate (obj/vickyGraph.o unit 1 section index 10)
+
+`_StringLiteral_[84,105,109,101,32,37,100,13]` in section 'cdata'
+ placed at address 007246-00724e of size 000009
+(obj/main.o unit 0 section index 11)
+    Defines:
+        `_StringLiteral_[84,105,109,101,32,37,100,13]` = 007246
+    Referenced from:
+        main (obj/main.o unit 0 section index 2)
+
+_Const_00000000000f4240 in section 'cdata'
+ placed at address 00724f-007256 of size 000008
+(lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 10)
+    Defines:
+        _Const_00000000000f4240 = 00724f
+    Referenced from:
+        __dtoa_engine (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 2)
+
+_Const_000000000000000a in section 'cdata'
+ placed at address 007257-00725e of size 000008
+(lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 9)
+    Defines:
+        _Const_000000000000000a = 007257
+    Referenced from:
+        __dtoa_engine (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 2)
+
+_Const_ffffffffffffffff in section 'cdata'
+ placed at address 00725f-007266 of size 000008
+(time.o (from clib-lc-sd-Foenix.a) unit 48 section index 3)
+    Defines:
+        _Const_ffffffffffffffff = 00725f
+    Referenced from:
+        time (time.o (from clib-lc-sd-Foenix.a) unit 48 section index 2)
+
+`?L430` in section 'switch'  placed at address 007267-00726e of size 000008
+(obj/vickyGraph.o unit 1 section index 99)
+    References:
+        vickyVideomode in (obj/vickyGraph.o unit 1 section index 13)
+
+g_nullstring in section 'cdata'  placed at address 00726f-007275 of size 000007
+(__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 2)
+
+_Stub_exit in section 'code'  placed at address 007276-00727a of size 000005
+(stub_exit-lc-sd.o (from Foenix-lc-sd.a) unit 13 section index 2)
+    Defines:
+        _Stub_exit = 007276
+    References:
+        _InitialStack in (Foenix-startup-lc-sd.o (from Foenix-lc-sd.a) unit 5 section index 8)
+    Referenced from:
+        _Exit (exitC99.o (from clib-lc-sd-Foenix.a) unit 10 section index 3)
+
+`_StringLiteral_[27,91,50,74]` in section 'cdata'
+ placed at address 00727b-00727f of size 000005
+(obj/vickyGraph.o unit 1 section index 101)
+    Defines:
+        `_StringLiteral_[27,91,50,74]` = 00727b
+    Referenced from:
+        ANSIClrScr (obj/vickyGraph.o unit 1 section index 11)
+
+_StringLiteral_nan in section 'cdata'
+ placed at address 007280-007283 of size 000004
+(__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 4)
+    Defines:
+        _StringLiteral_nan = 007280
+    Referenced from:
+        __vsprintf (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 6)
+
+_StringLiteral_inf in section 'cdata'
+ placed at address 007284-007287 of size 000004
+(__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 3)
+    Defines:
+        _StringLiteral_inf = 007284
+    Referenced from:
+        __vsprintf (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 6)
+
+DMA_wait_delay in section 'code'
+ placed at address 007288-00728a of size 000003
+(dma-lc-sd.o (from Foenix-lc-sd.a) unit 58 section index 2)
+    Defines:
+        DMA_wait_delay = 007288
+    Referenced from:
+        vram2dram_linearCopy (obj/vickyGraph.o unit 1 section index 23)
+        (obj/vickyGraph.o unit 1 section index 56)
+
+Section 'heap'  placed at address 002100-0030ff of size 001000
+(linker generated)
+
+__atexit in section 'zdata'  placed at address 003100-00317f of size 000080
+(exit.o (from clib-lc-sd-Foenix.a) unit 7 section index 2)
+    Defines:
+        __atexit = 003100
+    Referenced from:
+        exit (exit.o (from clib-lc-sd-Foenix.a) unit 7 section index 3)
+
+_ExitCloseStreams in section 'zdata'
+ placed at address 003180-003183 of size 000004
+(exitC99.o (from clib-lc-sd-Foenix.a) unit 10 section index 2)
+    Defines:
+        _ExitCloseStreams = 003180
+    Referenced from:
+        _Exit (exitC99.o (from clib-lc-sd-Foenix.a) unit 10 section index 3)
+        __initialize_global_streams (streamlist.o (from clib-lc-sd-Foenix.a) unit 41 section index 3)
+
+__global_streams in section 'zdata'
+ placed at address 003184-0031d1 of size 00004e
+(streamlist.o (from clib-lc-sd-Foenix.a) unit 41 section index 4)
+    Defines:
+        __global_streams = 003184
+    Referenced from:
+        printf (lib_printf.o (from clib-lc-sd-Foenix.a) unit 14 section index 2)
+        (streamlist.o (from clib-lc-sd-Foenix.a) unit 41 section index 2)
+        __initialize_global_streams (streamlist.o (from clib-lc-sd-Foenix.a) unit 41 section index 3)
+
+errno in section 'zdata'  placed at address 0031d2-0031d3 of size 000002
+(errno.o (from clib-lc-sd-Foenix.a) unit 28 section index 2)
+    Defines:
+        errno = 0031d2
+    Referenced from:
+        (lib_stdoutstream.o (from clib-lc-sd-Foenix.a) unit 26 section index 2)
+        __lib_fflush (lib_libfflush.o (from clib-lc-sd-Foenix.a) unit 30 section index 2)
+        _Stub_write (stub_write-lc-sd.o (from Foenix-lc-sd.a) unit 32 section index 2)
+        __lib_fwrite (lib_libfwrite.o (from clib-lc-sd-Foenix.a) unit 35 section index 2)
+        __lib_rdflush (lib_rdflush.o (from clib-lc-sd-Foenix.a) unit 36 section index 2)
+
+_InitialStack in section 'zdata'
+ placed at address 0031d4-0031d5 of size 000002
+(Foenix-startup-lc-sd.o (from Foenix-lc-sd.a) unit 5 section index 8)
+    Defines:
+        _InitialStack = 0031d4
+    Referenced from:
+        __data_initialization_needed (Foenix-startup-lc-sd.o (from Foenix-lc-sd.a) unit 5 section index 3)
+        _Stub_exit (stub_exit-lc-sd.o (from Foenix-lc-sd.a) unit 13 section index 2)
+
+vBitPlane in section 'zdata'  placed at address 0031d6-0031d9 of size 000004
+(obj/vickyGraph.o unit 1 section index 8)
+    Defines:
+        vBitPlane = 0031d6
+    Referenced from:
+        vickyBitmap (obj/vickyGraph.o unit 1 section index 14)
+        (obj/vickyGraph.o unit 1 section index 71)
+
+maxVickyMemory in section 'zdata'
+ placed at address 0031da-0031dd of size 000004
+(obj/vickyGraph.o unit 1 section index 7)
+    Defines:
+        maxVickyMemory = 0031da
+    Referenced from:
+        vickyVideomode (obj/vickyGraph.o unit 1 section index 13)
+        vickyBitmap (obj/vickyGraph.o unit 1 section index 14)
+
+vickyBitmapPage in section 'zdata'
+ placed at address 0031de-0031df of size 000002
+(obj/vickyGraph.o unit 1 section index 6)
+    Defines:
+        vickyBitmapPage = 0031de
+    Referenced from:
+        vickyVideomode (obj/vickyGraph.o unit 1 section index 13)
+        vickyBitmap (obj/vickyGraph.o unit 1 section index 14)
+        vram2dram_linearCopy (obj/vickyGraph.o unit 1 section index 23)
+        plot_line (obj/vickyGraph.o unit 1 section index 28)
+        (obj/vickyGraph.o unit 1 section index 43)
+        (obj/vickyGraph.o unit 1 section index 46)
+        (obj/vickyGraph.o unit 1 section index 71)
+
+vickyResY in section 'zdata'  placed at address 0031e0-0031e3 of size 000004
+(obj/vickyGraph.o unit 1 section index 5)
+    Defines:
+        vickyResY = 0031e0
+    Referenced from:
+        vickyVideomode (obj/vickyGraph.o unit 1 section index 13)
+        vickyBitmap (obj/vickyGraph.o unit 1 section index 14)
+        (obj/vickyGraph.o unit 1 section index 20)
+        plot_solid_rectangle (obj/vickyGraph.o unit 1 section index 25)
+        plot_line (obj/vickyGraph.o unit 1 section index 28)
+        (obj/vickyGraph.o unit 1 section index 50)
+        (obj/vickyGraph.o unit 1 section index 64)
+        (obj/vickyGraph.o unit 1 section index 67)
+        (obj/vickyGraph.o unit 1 section index 72)
+        (obj/vickyGraph.o unit 1 section index 77)
+
+vickyResX in section 'zdata'  placed at address 0031e4-0031e7 of size 000004
+(obj/vickyGraph.o unit 1 section index 4)
+    Defines:
+        vickyResX = 0031e4
+    Referenced from:
+        vickyVideomode (obj/vickyGraph.o unit 1 section index 13)
+        vickyBitmap (obj/vickyGraph.o unit 1 section index 14)
+        getScanLine (obj/vickyGraph.o unit 1 section index 19)
+        (obj/vickyGraph.o unit 1 section index 20)
+        plot_solid_rectangle (obj/vickyGraph.o unit 1 section index 25)
+        plot_line (obj/vickyGraph.o unit 1 section index 28)
+        (obj/vickyGraph.o unit 1 section index 41)
+        (obj/vickyGraph.o unit 1 section index 50)
+        (obj/vickyGraph.o unit 1 section index 60)
+        (obj/vickyGraph.o unit 1 section index 64)
+        (obj/vickyGraph.o unit 1 section index 66)
+        (obj/vickyGraph.o unit 1 section index 93)
+
+stackTop in section 'zdata'  placed at address 0031e8-0031e9 of size 000002
+(obj/vickyGraph.o unit 1 section index 3)
+    Defines:
+        stackTop = 0031e8
+    Referenced from:
+        isStackEmpty (obj/vickyGraph.o unit 1 section index 33)
+        isStackFull (obj/vickyGraph.o unit 1 section index 34)
+        stackPeek (obj/vickyGraph.o unit 1 section index 35)
+        stackPop (obj/vickyGraph.o unit 1 section index 36)
+        stackPush (obj/vickyGraph.o unit 1 section index 37)
+        floodFill (obj/vickyGraph.o unit 1 section index 38)
+        (obj/vickyGraph.o unit 1 section index 70)
+
+stack in section 'zdata'  placed at address 0031ea-0033e9 of size 000200
+(obj/vickyGraph.o unit 1 section index 2)
+    Defines:
+        stack = 0031ea
+    Referenced from:
+        stackPeek (obj/vickyGraph.o unit 1 section index 35)
+        stackPop (obj/vickyGraph.o unit 1 section index 36)
+        stackPush (obj/vickyGraph.o unit 1 section index 37)
+        (obj/vickyGraph.o unit 1 section index 70)
+
+__rand48_add in section 'data'  placed at address 0033ea-0033eb of size 000002
+(_rand48.o (from clib-lc-sd-Foenix.a) unit 46 section index 6)
+    Defines:
+        __rand48_add = 0033ea
+    Referenced from:
+        __srand48 (srand48.o (from clib-lc-sd-Foenix.a) unit 45 section index 2)
+        __dorand48 (_rand48.o (from clib-lc-sd-Foenix.a) unit 46 section index 2)
+
+__rand48_mult in section 'data'  placed at address 0033ec-0033f1 of size 000006
+(_rand48.o (from clib-lc-sd-Foenix.a) unit 46 section index 5)
+    Defines:
+        __rand48_mult = 0033ec
+    Referenced from:
+        __srand48 (srand48.o (from clib-lc-sd-Foenix.a) unit 45 section index 2)
+        __dorand48 (_rand48.o (from clib-lc-sd-Foenix.a) unit 46 section index 2)
+
+__rand48_seed in section 'data'  placed at address 0033f2-0033f7 of size 000006
+(_rand48.o (from clib-lc-sd-Foenix.a) unit 46 section index 4)
+    Defines:
+        __rand48_seed = 0033f2
+    Referenced from:
+        __srand48 (srand48.o (from clib-lc-sd-Foenix.a) unit 45 section index 2)
+        __lrand48 (lrand48.o (from clib-lc-sd-Foenix.a) unit 47 section index 2)
+
+__vsprintf in section 'farcode'  placed at address 040000-04143c of size 00143d
+(__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 6)
+    Defines:
+        __vsprintf = 040000
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _JmpIndLong in (controlFlow.o (from clib-lc-sd-Foenix.a) unit 9 section index 3)
+        _StringLiteral_inf in (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 3)
+        _StringLiteral_nan in (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 4)
+        _ValueSwitch16 in (vswitch16.o (from clib-lc-sd-Foenix.a) unit 21 section index 2)
+        __dtoa_engine in (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 2)
+        __ultoa_invert in (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 5)
+        strnlen in (lib_strnlen.o (from clib-lc-sd-Foenix.a) unit 20 section index 2)
+    Referenced from:
+        vfprintf (lib_vfprintf.o (from clib-lc-sd-Foenix.a) unit 15 section index 2)
+        (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 15)
+        (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 16)
+
+plot_solid_ellipse in section 'farcode'
+ placed at address 04143d-041937 of size 0004fb
+(obj/vickyGraph.o unit 1 section index 31)
+    Defines:
+        plot_solid_ellipse = 04143d
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _FillDP2 in (spill.o (from clib-lc-sd-Foenix.a) unit 59 section index 3)
+        _FillDP4 in (spill.o (from clib-lc-sd-Foenix.a) unit 59 section index 4)
+        _Float32Add in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+        _Float32EQ in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 2)
+        _Float32LT in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 3)
+        _Float32Mul in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+        _Float32Sub in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+        _Float32ToSInt32 in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 9)
+        _SInt32ToFloat32 in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 6)
+        plot_solid_rectangle in (obj/vickyGraph.o unit 1 section index 25)
+
+plot_ellipse in section 'farcode'
+ placed at address 041938-041d85 of size 00044e
+(obj/vickyGraph.o unit 1 section index 30)
+    Defines:
+        plot_ellipse = 041938
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _FillDP2 in (spill.o (from clib-lc-sd-Foenix.a) unit 59 section index 3)
+        _FillDP4 in (spill.o (from clib-lc-sd-Foenix.a) unit 59 section index 4)
+        _Float32Add in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+        _Float32LT in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 3)
+        _Float32Mul in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+        _Float32Sub in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+        _Float32ToSInt32 in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 9)
+        _SInt32ToFloat32 in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 6)
+
+__dtoa_engine in section 'farcode'
+ placed at address 041d86-0421b1 of size 00042c
+(lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 2)
+    Defines:
+        __dtoa_engine = 041d86
+    References:
+        _Const_000000000000000a in (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 9)
+        _Const_00000000000f4240 in (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 10)
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Float32Add in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+        _Float32Div in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+        _Float32EQ in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 2)
+        _Float32GE in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 5)
+        _Float32LT in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 3)
+        _Float32Mul in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+        _Float32Sub in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+        _Float32ToUInt64 in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 13)
+        _UDiv64 in (integer.o (from clib-lc-sd-Foenix.a) unit 25 section index 15)
+        _UMod64 in (integer.o (from clib-lc-sd-Foenix.a) unit 25 section index 15)
+        g_dtoa_round in (lib_dtoa_data.o (from clib-lc-sd-Foenix.a) unit 24 section index 4)
+        g_dtoa_scale_down in (lib_dtoa_data.o (from clib-lc-sd-Foenix.a) unit 24 section index 3)
+        g_dtoa_scale_up in (lib_dtoa_data.o (from clib-lc-sd-Foenix.a) unit 24 section index 2)
+    Referenced from:
+        __vsprintf (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 6)
+
+plot_line in section 'farcode'  placed at address 0421b2-0424f9 of size 000348
+(obj/vickyGraph.o unit 1 section index 28)
+    Defines:
+        plot_line = 0421b2
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _FillDP2 in (spill.o (from clib-lc-sd-Foenix.a) unit 59 section index 3)
+        abs in (lib_abs.o (from clib-lc-sd-Foenix.a) unit 60 section index 2)
+        vickyBitmapPage in (obj/vickyGraph.o unit 1 section index 6)
+        vickyResX in (obj/vickyGraph.o unit 1 section index 4)
+        vickyResY in (obj/vickyGraph.o unit 1 section index 5)
+    Referenced from:
+        plot_rectangle (obj/vickyGraph.o unit 1 section index 24)
+        plot_bezier (obj/vickyGraph.o unit 1 section index 26)
+        plot_solid_circle (obj/vickyGraph.o unit 1 section index 32)
+        floodFill (obj/vickyGraph.o unit 1 section index 38)
+        (obj/vickyGraph.o unit 1 section index 51)
+        (obj/vickyGraph.o unit 1 section index 52)
+        (obj/vickyGraph.o unit 1 section index 53)
+        (obj/vickyGraph.o unit 1 section index 54)
+        (obj/vickyGraph.o unit 1 section index 55)
+        (obj/vickyGraph.o unit 1 section index 86)
+
+plot_bezier in section 'farcode'
+ placed at address 0424fa-042797 of size 00029e
+(obj/vickyGraph.o unit 1 section index 26)
+    Defines:
+        plot_bezier = 0424fa
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _FillDP2 in (spill.o (from clib-lc-sd-Foenix.a) unit 59 section index 3)
+        _FillDP4 in (spill.o (from clib-lc-sd-Foenix.a) unit 59 section index 4)
+        _Float32Add in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+        _Float32EQ in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 2)
+        _Float32Mul in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+        _Float32ToSInt32 in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 9)
+        _SInt32ToFloat32 in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 6)
+        plot_line in (obj/vickyGraph.o unit 1 section index 28)
+        pow in (obj/vickyGraph.o unit 1 section index 27)
+
+floodFill in section 'farcode'  placed at address 042798-0429a0 of size 000209
+(obj/vickyGraph.o unit 1 section index 38)
+    Defines:
+        floodFill = 042798
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        getScanLine in (obj/vickyGraph.o unit 1 section index 19)
+        plot_line in (obj/vickyGraph.o unit 1 section index 28)
+        stackPop in (obj/vickyGraph.o unit 1 section index 36)
+        stackPush in (obj/vickyGraph.o unit 1 section index 37)
+        stackTop in (obj/vickyGraph.o unit 1 section index 3)
+
+vickyVideomode in section 'farcode'
+ placed at address 0429a1-042b93 of size 0001f3
+(obj/vickyGraph.o unit 1 section index 13)
+    Defines:
+        vickyVideomode = 0429a1
+    References:
+        ANSIScrSize in (obj/vickyGraph.o unit 1 section index 12)
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        `_StringLiteral_[103,114,97,112,104,105,99,115,32,109,111,100,101,32,37,100,32,120,58,37,108,100,32,121,58,37,108,100,10,13]` in (obj/vickyGraph.o unit 1 section index 109)
+        `_StringLiteral_[77,101,109,111,114,121,32,100,101,116,101,99,116,101,100,58,32,37,108,120,32,10,13]` in (obj/vickyGraph.o unit 1 section index 105)
+        maxVickyMemory in (obj/vickyGraph.o unit 1 section index 7)
+        printf in (lib_printf.o (from clib-lc-sd-Foenix.a) unit 14 section index 2)
+        vickyBitmapPage in (obj/vickyGraph.o unit 1 section index 6)
+        vickyResX in (obj/vickyGraph.o unit 1 section index 4)
+        vickyResY in (obj/vickyGraph.o unit 1 section index 5)
+    Referenced from:
+        setupScreen (obj/main.o unit 0 section index 3)
+        (obj/vickyGraph.o unit 1 section index 99)
+
+plot_solid_circle in section 'farcode'
+ placed at address 042b94-042d4b of size 0001b8
+(obj/vickyGraph.o unit 1 section index 32)
+    Defines:
+        plot_solid_circle = 042b94
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Float32ToSInt32 in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 9)
+        plot_line in (obj/vickyGraph.o unit 1 section index 28)
+        plot_solid_rectangle in (obj/vickyGraph.o unit 1 section index 25)
+
+plot_solid_rectangle in section 'farcode'
+ placed at address 042d4c-042ef3 of size 0001a8
+(obj/vickyGraph.o unit 1 section index 25)
+    Defines:
+        plot_solid_rectangle = 042d4c
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Mul32 in (integer.o (from clib-lc-sd-Foenix.a) unit 25 section index 3)
+        vickyResX in (obj/vickyGraph.o unit 1 section index 4)
+        vickyResY in (obj/vickyGraph.o unit 1 section index 5)
+    Referenced from:
+        plot_solid_ellipse (obj/vickyGraph.o unit 1 section index 31)
+        plot_solid_circle (obj/vickyGraph.o unit 1 section index 32)
+
+vickyBitmap in section 'farcode'
+ placed at address 042ef4-043085 of size 000192
+(obj/vickyGraph.o unit 1 section index 14)
+    Defines:
+        vickyBitmap = 042ef4
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Mul32 in (integer.o (from clib-lc-sd-Foenix.a) unit 25 section index 3)
+        `_StringLiteral_Bitmap page must be 0 or 1!` in (obj/vickyGraph.o unit 1 section index 103)
+        `_StringLiteral_[78,111,116,32,101,110,111,117,103,104,32,109,101,109,111,114,121,32,97,116,32,97,100,100,114,101,115,115,32,37,108,120,32,102,111,114,32,97,32,100,37,32,98,121,32,100,37,32,115,99,114,101,101,110,33,44,32,37,120,108,32,98,121,116,101,115,32,114,101,113,117,105,114,101,100,46,10,13]` in (obj/vickyGraph.o unit 1 section index 106)
+        `_StringLiteral_[86,82,65,77,32,100,101,116,101,99,116,101,100,58,32,48,120,98,48,48,48,48,48,32,45,32,37,108,120,10,13]` in (obj/vickyGraph.o unit 1 section index 107)
+        maxVickyMemory in (obj/vickyGraph.o unit 1 section index 7)
+        printf in (lib_printf.o (from clib-lc-sd-Foenix.a) unit 14 section index 2)
+        vBitPlane in (obj/vickyGraph.o unit 1 section index 8)
+        vickyBitmapPage in (obj/vickyGraph.o unit 1 section index 6)
+        vickyResX in (obj/vickyGraph.o unit 1 section index 4)
+        vickyResY in (obj/vickyGraph.o unit 1 section index 5)
+    Referenced from:
+        setupScreen (obj/main.o unit 0 section index 3)
+
+getScanLine in section 'farcode'
+ placed at address 043086-0431ec of size 000167
+(obj/vickyGraph.o unit 1 section index 19)
+    Defines:
+        getScanLine = 043086
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        read_vram_buffer in (obj/vickyGraph.o unit 1 section index 17)
+        vickyResX in (obj/vickyGraph.o unit 1 section index 4)
+    Referenced from:
+        floodFill (obj/vickyGraph.o unit 1 section index 38)
+        (obj/vickyGraph.o unit 1 section index 73)
+
+__lib_fwrite in section 'farcode'
+ placed at address 0431ed-04332e of size 000142
+(lib_libfwrite.o (from clib-lc-sd-Foenix.a) unit 35 section index 2)
+    Defines:
+        __lib_fwrite = 0431ed
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Stub_write in (stub_write-lc-sd.o (from Foenix-lc-sd.a) unit 32 section index 2)
+        __lib_fflush in (lib_libfflush.o (from clib-lc-sd-Foenix.a) unit 30 section index 2)
+        __lib_rdflush in (lib_rdflush.o (from clib-lc-sd-Foenix.a) unit 36 section index 2)
+        errno in (errno.o (from clib-lc-sd-Foenix.a) unit 28 section index 2)
+    Referenced from:
+        fputc (lib_fputc.o (from clib-lc-sd-Foenix.a) unit 29 section index 2)
+
+_Float32LT in section 'farcode'  placed at address 04332f-04336e of size 000040
+(float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 3)
+    Defines:
+        _Float32LT = 04332f
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+    Referenced from:
+        plot_ellipse (obj/vickyGraph.o unit 1 section index 30)
+        plot_solid_ellipse (obj/vickyGraph.o unit 1 section index 31)
+        (obj/vickyGraph.o unit 1 section index 96)
+        __dtoa_engine (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 2)
+
+exitFloat32LT in section 'farcode'
+ placed at address 04336f-04338a of size 00001c
+(float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 4)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+_Float32GE in section 'farcode'  placed at address 04338b-0433cc of size 000042
+(float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 5)
+    Defines:
+        _Float32GE = 04338b
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+    Referenced from:
+        (obj/vickyGraph.o unit 1 section index 80)
+        __dtoa_engine (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 2)
+
+_SInt32ToFloat32 in section 'farcode'
+ placed at address 0433cd-0433e3 of size 000017
+(float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 6)
+    Defines:
+        _SInt32ToFloat32 = 0433cd
+    Referenced from:
+        plot_bezier (obj/vickyGraph.o unit 1 section index 26)
+        plot_ellipse (obj/vickyGraph.o unit 1 section index 30)
+        plot_solid_ellipse (obj/vickyGraph.o unit 1 section index 31)
+        (obj/vickyGraph.o unit 1 section index 44)
+        (obj/vickyGraph.o unit 1 section index 87)
+        (obj/vickyGraph.o unit 1 section index 88)
+
+_UInt32ToFloat32 in section 'farcode'
+ placed at address 0433e4-043458 of size 000075
+(float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 7)
+    Defines:
+        _UInt32ToFloat32 = 0433e4
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+plot_circle in section 'farcode'
+ placed at address 043459-043577 of size 00011f
+(obj/vickyGraph.o unit 1 section index 29)
+    Defines:
+        plot_circle = 043459
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+__lib_fflush in section 'farcode'
+ placed at address 043578-04368b of size 000114
+(lib_libfflush.o (from clib-lc-sd-Foenix.a) unit 30 section index 2)
+    Defines:
+        __lib_fflush = 043578
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Stub_write in (stub_write-lc-sd.o (from Foenix-lc-sd.a) unit 32 section index 2)
+        errno in (errno.o (from clib-lc-sd-Foenix.a) unit 28 section index 2)
+    Referenced from:
+        (lib_stdoutstream.o (from clib-lc-sd-Foenix.a) unit 26 section index 3)
+        fputc (lib_fputc.o (from clib-lc-sd-Foenix.a) unit 29 section index 2)
+        __lib_fwrite (lib_libfwrite.o (from clib-lc-sd-Foenix.a) unit 35 section index 2)
+        __lib_wrflush (lib_wrflush.o (from clib-lc-sd-Foenix.a) unit 40 section index 2)
+
+__ultoa_invert in section 'farcode'
+ placed at address 04368c-043793 of size 000108
+(__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 5)
+    Defines:
+        __ultoa_invert = 04368c
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _UDiv64 in (integer.o (from clib-lc-sd-Foenix.a) unit 25 section index 15)
+        _UMod64 in (integer.o (from clib-lc-sd-Foenix.a) unit 25 section index 15)
+    Referenced from:
+        __vsprintf (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 6)
+
+vram2dram_linearCopy in section 'farcode'
+ placed at address 043794-043885 of size 0000f2
+(obj/vickyGraph.o unit 1 section index 23)
+    Defines:
+        vram2dram_linearCopy = 043794
+    References:
+        DMA_wait_delay in (dma-lc-sd.o (from Foenix-lc-sd.a) unit 58 section index 2)
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _FillDP2 in (spill.o (from clib-lc-sd-Foenix.a) unit 59 section index 3)
+        `_StringLiteral_[115,111,117,114,99,101,58,32,37,120,32,100,101,115,116,58,32,37,120,32,108,101,110,58,37,108,100,13]` in (obj/vickyGraph.o unit 1 section index 110)
+        `_StringLiteral_[119,97,105,116,105,110,103,46,46,13]` in (obj/vickyGraph.o unit 1 section index 111)
+        `_StringLiteral_[70,105,110,105,115,104,46,46,13]` in (obj/vickyGraph.o unit 1 section index 104)
+        `_StringLiteral_[88,102,101,114,32,105,110,105,116,105,116,97,116,101,100,13]` in (obj/vickyGraph.o unit 1 section index 108)
+        printf in (lib_printf.o (from clib-lc-sd-Foenix.a) unit 14 section index 2)
+        vickyBitmapPage in (obj/vickyGraph.o unit 1 section index 6)
+        wait_for_DMA_to_finish in (vdma_wait-lc-sd.o (from Foenix-lc-sd.a) unit 57 section index 2)
+
+__dorand48 in section 'farcode'  placed at address 043886-043965 of size 0000e0
+(_rand48.o (from clib-lc-sd-Foenix.a) unit 46 section index 2)
+    Defines:
+        __dorand48 = 043886
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        __rand48_add in (_rand48.o (from clib-lc-sd-Foenix.a) unit 46 section index 6)
+        __rand48_mult in (_rand48.o (from clib-lc-sd-Foenix.a) unit 46 section index 5)
+    Referenced from:
+        __lrand48 (lrand48.o (from clib-lc-sd-Foenix.a) unit 47 section index 2)
+
+_UDiv64 in section 'farcode'  placed at address 043966-043a17 of size 0000b2
+(integer.o (from clib-lc-sd-Foenix.a) unit 25 section index 15)
+    Defines:
+        _UMod64 = 043969
+        _UDiv64 = 043966
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+    Referenced from:
+        __ultoa_invert (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 5)
+        __dtoa_engine (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 2)
+
+getPixel in section 'farcode'  placed at address 043a18-043aaf of size 000098
+(obj/vickyGraph.o unit 1 section index 18)
+    Defines:
+        getPixel = 043a18
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+_ValueSwitch16 in section 'farcode'
+ placed at address 043ab0-043b37 of size 000088
+(vswitch16.o (from clib-lc-sd-Foenix.a) unit 21 section index 2)
+    Defines:
+        _ValueSwitch16 = 043ab0
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+    Referenced from:
+        __vsprintf (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 6)
+
+__initialize_sections in section 'farcode'
+ placed at address 043b38-043bbf of size 000088
+(initialize.o (from clib-lc-sd-Foenix.a) unit 62 section index 2)
+    Defines:
+        __initialize_sections = 043b38
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        __memcpy_far in (memcpy_far.o (from clib-lc-sd-Foenix.a) unit 64 section index 2)
+        __memset_far in (memset_far.o (from clib-lc-sd-Foenix.a) unit 63 section index 2)
+    Referenced from:
+        __data_initialization_needed (Foenix-startup-lc-sd.o (from Foenix-lc-sd.a) unit 5 section index 3)
+
+setupScreen in section 'farcode'
+ placed at address 043bc0-043c45 of size 000086
+(obj/main.o unit 0 section index 3)
+    Defines:
+        setupScreen = 043bc0
+    References:
+        ANSIClrScr in (obj/vickyGraph.o unit 1 section index 11)
+        ANSILocate in (obj/vickyGraph.o unit 1 section index 10)
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        `_StringLiteral_Error %d while setting VideoMode` in (obj/main.o unit 0 section index 8)
+        `_StringLiteral_Error %d while setting bitmap` in (obj/main.o unit 0 section index 9)
+        printf in (lib_printf.o (from clib-lc-sd-Foenix.a) unit 14 section index 2)
+        vickyBitmap in (obj/vickyGraph.o unit 1 section index 14)
+        vickyVideomode in (obj/vickyGraph.o unit 1 section index 13)
+    Referenced from:
+        main (obj/main.o unit 0 section index 2)
+
+floatToUInt64 in section 'farcode'
+ placed at address 043c46-043cc1 of size 00007c
+(float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 15)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+read_vram_buffer in section 'farcode'
+ placed at address 043cc2-043d3c of size 00007b
+(obj/vickyGraph.o unit 1 section index 17)
+    Defines:
+        read_vram_buffer = 043cc2
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+    Referenced from:
+        getScanLine (obj/vickyGraph.o unit 1 section index 19)
+
+__lib_rdflush in section 'farcode'
+ placed at address 043d3d-043db1 of size 000075
+(lib_rdflush.o (from clib-lc-sd-Foenix.a) unit 36 section index 2)
+    Defines:
+        __lib_rdflush = 043d3d
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        errno in (errno.o (from clib-lc-sd-Foenix.a) unit 28 section index 2)
+        fseek in (lib_fseek.o (from clib-lc-sd-Foenix.a) unit 37 section index 2)
+    Referenced from:
+        __lib_fwrite (lib_libfwrite.o (from clib-lc-sd-Foenix.a) unit 35 section index 2)
+        fseek (lib_fseek.o (from clib-lc-sd-Foenix.a) unit 37 section index 2)
+
+plot_rectangle in section 'farcode'
+ placed at address 043db2-043e18 of size 000067
+(obj/vickyGraph.o unit 1 section index 24)
+    Defines:
+        plot_rectangle = 043db2
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        plot_line in (obj/vickyGraph.o unit 1 section index 28)
+
+fputc in section 'farcode'  placed at address 043e19-043e7e of size 000066
+(lib_fputc.o (from clib-lc-sd-Foenix.a) unit 29 section index 2)
+    Defines:
+        fputc = 043e19
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        __lib_fflush in (lib_libfflush.o (from clib-lc-sd-Foenix.a) unit 30 section index 2)
+        __lib_fwrite in (lib_libfwrite.o (from clib-lc-sd-Foenix.a) unit 35 section index 2)
+    Referenced from:
+        (lib_stdoutstream.o (from clib-lc-sd-Foenix.a) unit 26 section index 2)
+
+shake in section 'farcode'  placed at address 043e7f-043ee2 of size 000064
+(obj/main.o unit 0 section index 4)
+    Defines:
+        shake = 043e7f
+    Referenced from:
+        main (obj/main.o unit 0 section index 2)
+
+_Stub_write in section 'farcode'
+ placed at address 043ee3-043f40 of size 00005e
+(stub_write-lc-sd.o (from Foenix-lc-sd.a) unit 32 section index 2)
+    Defines:
+        _Stub_write = 043ee3
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Stub_putchar in (stub_putchar-lc-sd.o (from Foenix-lc-sd.a) unit 34 section index 2)
+        errno in (errno.o (from clib-lc-sd-Foenix.a) unit 28 section index 2)
+    Referenced from:
+        __lib_fflush (lib_libfflush.o (from clib-lc-sd-Foenix.a) unit 30 section index 2)
+        __lib_fwrite (lib_libfwrite.o (from clib-lc-sd-Foenix.a) unit 35 section index 2)
+
+fseek in section 'farcode'  placed at address 043f41-043f9c of size 00005c
+(lib_fseek.o (from clib-lc-sd-Foenix.a) unit 37 section index 2)
+    Defines:
+        fseek = 043f41
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Stub_lseek in (stub_lseek-lc-sd.o (from Foenix-lc-sd.a) unit 39 section index 2)
+        __lib_rdflush in (lib_rdflush.o (from clib-lc-sd-Foenix.a) unit 36 section index 2)
+        __lib_wrflush in (lib_wrflush.o (from clib-lc-sd-Foenix.a) unit 40 section index 2)
+    Referenced from:
+        __lib_rdflush (lib_rdflush.o (from clib-lc-sd-Foenix.a) unit 36 section index 2)
+
+setPixel in section 'farcode'  placed at address 043f9d-043ff7 of size 00005b
+(obj/vickyGraph.o unit 1 section index 20)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        vickyResX in (obj/vickyGraph.o unit 1 section index 4)
+        vickyResY in (obj/vickyGraph.o unit 1 section index 5)
+
+floatToUInt32 in section 'farcode'
+ placed at address 043ff8-04404c of size 000055
+(float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 10)
+
+main in section 'farcode'  placed at address 04404d-04409e of size 000052
+(obj/main.o unit 0 section index 2)
+    Defines:
+        main = 04404d
+    References:
+        ANSIClrScr in (obj/vickyGraph.o unit 1 section index 11)
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        `_StringLiteral_[84,104,120,32,102,111,114,32,119,97,116,99,104,105,110,103,32,116,104,105,115,32,100,101,109,111,10,13]` in (obj/main.o unit 0 section index 10)
+        `_StringLiteral_[84,105,109,101,32,37,100,13]` in (obj/main.o unit 0 section index 11)
+        clrBitmap in (obj/vickyGraph.o unit 1 section index 22)
+        printf in (lib_printf.o (from clib-lc-sd-Foenix.a) unit 14 section index 2)
+        setupScreen in (obj/main.o unit 0 section index 3)
+        shake in (obj/main.o unit 0 section index 4)
+        srand in (rand.o (from clib-lc-sd-Foenix.a) unit 44 section index 3)
+        time in (time.o (from clib-lc-sd-Foenix.a) unit 48 section index 2)
+    Referenced from:
+        (Foenix-startup-lc-sd.o (from Foenix-lc-sd.a) unit 5 section index 6)
+
+__memcpy_far in section 'farcode'
+ placed at address 04409f-0440ed of size 00004f
+(memcpy_far.o (from clib-lc-sd-Foenix.a) unit 64 section index 2)
+    Defines:
+        __memcpy_far = 04409f
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+    Referenced from:
+        __initialize_sections (initialize.o (from clib-lc-sd-Foenix.a) unit 62 section index 2)
+
+__memset_far in section 'farcode'
+ placed at address 0440ee-04413a of size 00004d
+(memset_far.o (from clib-lc-sd-Foenix.a) unit 63 section index 2)
+    Defines:
+        __memset_far = 0440ee
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+    Referenced from:
+        __initialize_sections (initialize.o (from clib-lc-sd-Foenix.a) unit 62 section index 2)
+
+pow in section 'farcode'  placed at address 04413b-044184 of size 00004a
+(obj/vickyGraph.o unit 1 section index 27)
+    Defines:
+        pow = 04413b
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+    Referenced from:
+        plot_bezier (obj/vickyGraph.o unit 1 section index 26)
+        (obj/vickyGraph.o unit 1 section index 57)
+
+exit in section 'farcode'  placed at address 044185-0441cd of size 000049
+(exit.o (from clib-lc-sd-Foenix.a) unit 7 section index 3)
+    Defines:
+        exit = 044185
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Exit in (exitC99.o (from clib-lc-sd-Foenix.a) unit 10 section index 3)
+        _JmpIndLong in (controlFlow.o (from clib-lc-sd-Foenix.a) unit 9 section index 3)
+        __atexit in (exit.o (from clib-lc-sd-Foenix.a) unit 7 section index 2)
+    Referenced from:
+        (Foenix-startup-lc-sd.o (from Foenix-lc-sd.a) unit 5 section index 6)
+
+__initialize_global_streams in section 'farcode'
+ placed at address 0441ce-044216 of size 000049
+(streamlist.o (from clib-lc-sd-Foenix.a) unit 41 section index 3)
+    Defines:
+        __initialize_global_streams = 0441ce
+    References:
+        _ExitCloseStreams in (exitC99.o (from clib-lc-sd-Foenix.a) unit 10 section index 2)
+        __global_streams in (streamlist.o (from clib-lc-sd-Foenix.a) unit 41 section index 4)
+    Referenced from:
+        __call_initialize_global_streams (Foenix-startup-lc-sd.o (from Foenix-lc-sd.a) unit 5 section index 4)
+
+delay in section 'farcode'  placed at address 044217-04425f of size 000049
+(obj/main.o unit 0 section index 5)
+    Defines:
+        delay = 044217
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        time in (time.o (from clib-lc-sd-Foenix.a) unit 48 section index 2)
+    Referenced from:
+        (obj/main.o unit 0 section index 6)
+
+__lib_stdoutstream in section 'farcode'
+ placed at address 044260-0442a6 of size 000047
+(lib_stdoutstream.o (from clib-lc-sd-Foenix.a) unit 26 section index 4)
+    Defines:
+        __lib_stdoutstream = 044260
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        __lib_noflush in (lib_libnoflush.o (from clib-lc-sd-Foenix.a) unit 27 section index 2)
+    Referenced from:
+        vfprintf (lib_vfprintf.o (from clib-lc-sd-Foenix.a) unit 15 section index 2)
+
+vfprintf in section 'farcode'  placed at address 0442a7-0442e9 of size 000043
+(lib_vfprintf.o (from clib-lc-sd-Foenix.a) unit 15 section index 2)
+    Defines:
+        vfprintf = 0442a7
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        __lib_stdoutstream in (lib_stdoutstream.o (from clib-lc-sd-Foenix.a) unit 26 section index 4)
+        __vsprintf in (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 6)
+    Referenced from:
+        printf (lib_printf.o (from clib-lc-sd-Foenix.a) unit 14 section index 2)
+
+_Float32EQ in section 'farcode'  placed at address 0442ea-04432b of size 000042
+(float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 2)
+    Defines:
+        _Float32EQ = 0442ea
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+    Referenced from:
+        plot_bezier (obj/vickyGraph.o unit 1 section index 26)
+        plot_solid_ellipse (obj/vickyGraph.o unit 1 section index 31)
+        __dtoa_engine (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 2)
+
+_Float32Add in section 'farcode'
+ placed at address 04432c-044369 of size 00003e
+(float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+    Defines:
+        _Float32Sub = 044331
+        _Float32Mul = 044336
+        _Float32Div = 04433b
+        _Float32Add = 04432c
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+    Referenced from:
+        plot_bezier (obj/vickyGraph.o unit 1 section index 26)
+        plot_ellipse (obj/vickyGraph.o unit 1 section index 30)
+        plot_solid_ellipse (obj/vickyGraph.o unit 1 section index 31)
+        (obj/vickyGraph.o unit 1 section index 39)
+        (obj/vickyGraph.o unit 1 section index 40)
+        (obj/vickyGraph.o unit 1 section index 42)
+        (obj/vickyGraph.o unit 1 section index 44)
+        (obj/vickyGraph.o unit 1 section index 65)
+        (obj/vickyGraph.o unit 1 section index 68)
+        (obj/vickyGraph.o unit 1 section index 91)
+        __dtoa_engine (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 2)
+
+`?L3` in section 'farcode'  placed at address 04436a-0443a5 of size 00003c
+(lib_stdoutstream.o (from clib-lc-sd-Foenix.a) unit 26 section index 2)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        errno in (errno.o (from clib-lc-sd-Foenix.a) unit 28 section index 2)
+        fputc in (lib_fputc.o (from clib-lc-sd-Foenix.a) unit 29 section index 2)
+
+`?L19` in section 'farcode'  placed at address 0443a6-0443dd of size 000038
+(streamlist.o (from clib-lc-sd-Foenix.a) unit 41 section index 2)
+    References:
+        _Stub_close in (stub_close-lc-sd.o (from Foenix-lc-sd.a) unit 43 section index 2)
+        __global_streams in (streamlist.o (from clib-lc-sd-Foenix.a) unit 41 section index 4)
+
+stackPush in section 'farcode'  placed at address 0443de-044414 of size 000037
+(obj/vickyGraph.o unit 1 section index 37)
+    Defines:
+        stackPush = 0443de
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        isStackFull in (obj/vickyGraph.o unit 1 section index 34)
+        stack in (obj/vickyGraph.o unit 1 section index 2)
+        stackTop in (obj/vickyGraph.o unit 1 section index 3)
+    Referenced from:
+        floodFill (obj/vickyGraph.o unit 1 section index 38)
+        (obj/vickyGraph.o unit 1 section index 90)
+
+stackPop in section 'farcode'  placed at address 044415-04444b of size 000037
+(obj/vickyGraph.o unit 1 section index 36)
+    Defines:
+        stackPop = 044415
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        isStackEmpty in (obj/vickyGraph.o unit 1 section index 33)
+        stack in (obj/vickyGraph.o unit 1 section index 2)
+        stackTop in (obj/vickyGraph.o unit 1 section index 3)
+    Referenced from:
+        floodFill (obj/vickyGraph.o unit 1 section index 38)
+
+_FillDP4 in section 'farcode'  placed at address 04444c-044480 of size 000035
+(spill.o (from clib-lc-sd-Foenix.a) unit 59 section index 4)
+    Defines:
+        _FillDP4 = 04444c
+    Referenced from:
+        plot_bezier (obj/vickyGraph.o unit 1 section index 26)
+        plot_ellipse (obj/vickyGraph.o unit 1 section index 30)
+        plot_solid_ellipse (obj/vickyGraph.o unit 1 section index 31)
+
+strnlen in section 'farcode'  placed at address 044481-0444b1 of size 000031
+(lib_strnlen.o (from clib-lc-sd-Foenix.a) unit 20 section index 2)
+    Defines:
+        strnlen = 044481
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+    Referenced from:
+        __vsprintf (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 6)
+
+__lrand48 in section 'farcode'  placed at address 0444b2-0444e2 of size 000031
+(lrand48.o (from clib-lc-sd-Foenix.a) unit 47 section index 2)
+    Defines:
+        __lrand48 = 0444b2
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        __dorand48 in (_rand48.o (from clib-lc-sd-Foenix.a) unit 46 section index 2)
+        __rand48_seed in (_rand48.o (from clib-lc-sd-Foenix.a) unit 46 section index 4)
+    Referenced from:
+        rand (rand.o (from clib-lc-sd-Foenix.a) unit 44 section index 2)
+
+__srand48 in section 'farcode'  placed at address 0444e3-04450f of size 00002d
+(srand48.o (from clib-lc-sd-Foenix.a) unit 45 section index 2)
+    Defines:
+        __srand48 = 0444e3
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        __rand48_add in (_rand48.o (from clib-lc-sd-Foenix.a) unit 46 section index 6)
+        __rand48_mult in (_rand48.o (from clib-lc-sd-Foenix.a) unit 46 section index 5)
+        __rand48_seed in (_rand48.o (from clib-lc-sd-Foenix.a) unit 46 section index 4)
+    Referenced from:
+        srand (rand.o (from clib-lc-sd-Foenix.a) unit 44 section index 3)
+
+_Exit in section 'farcode'  placed at address 044510-04453a of size 00002b
+(exitC99.o (from clib-lc-sd-Foenix.a) unit 10 section index 3)
+    Defines:
+        _Exit = 044510
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _ExitCloseStreams in (exitC99.o (from clib-lc-sd-Foenix.a) unit 10 section index 2)
+        _JmpIndLong in (controlFlow.o (from clib-lc-sd-Foenix.a) unit 9 section index 3)
+        _Stub_exit in (stub_exit-lc-sd.o (from Foenix-lc-sd.a) unit 13 section index 2)
+    Referenced from:
+        exit (exit.o (from clib-lc-sd-Foenix.a) unit 7 section index 3)
+
+clrBitmap in section 'farcode'  placed at address 04453b-044564 of size 00002a
+(obj/vickyGraph.o unit 1 section index 22)
+    Defines:
+        clrBitmap = 04453b
+    Referenced from:
+        main (obj/main.o unit 0 section index 2)
+
+setVickyBorder in section 'farcode'
+ placed at address 044565-04458e of size 00002a
+(obj/vickyGraph.o unit 1 section index 15)
+    Defines:
+        setVickyBorder = 044565
+
+_FillDP2 in section 'farcode'  placed at address 04458f-0445b6 of size 000028
+(spill.o (from clib-lc-sd-Foenix.a) unit 59 section index 3)
+    Defines:
+        _FillDP2 = 04458f
+    Referenced from:
+        vram2dram_linearCopy (obj/vickyGraph.o unit 1 section index 23)
+        plot_bezier (obj/vickyGraph.o unit 1 section index 26)
+        plot_line (obj/vickyGraph.o unit 1 section index 28)
+        plot_ellipse (obj/vickyGraph.o unit 1 section index 30)
+        plot_solid_ellipse (obj/vickyGraph.o unit 1 section index 31)
+
+`?L1131` in section 'farcode'  placed at address 0445b7-0445de of size 000028
+(obj/vickyGraph.o unit 1 section index 46)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        vickyBitmapPage in (obj/vickyGraph.o unit 1 section index 6)
+
+_Mul32 in section 'farcode'  placed at address 0445df-044603 of size 000025
+(integer.o (from clib-lc-sd-Foenix.a) unit 25 section index 3)
+    Defines:
+        _Mul32 = 0445df
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+    Referenced from:
+        vickyBitmap (obj/vickyGraph.o unit 1 section index 14)
+        plot_solid_rectangle (obj/vickyGraph.o unit 1 section index 25)
+        (obj/vickyGraph.o unit 1 section index 41)
+        (obj/vickyGraph.o unit 1 section index 50)
+        (obj/vickyGraph.o unit 1 section index 60)
+
+_Float32ToSInt32 in section 'farcode'
+ placed at address 044604-044625 of size 000022
+(float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 9)
+    Defines:
+        _Float32ToSInt32 = 044604
+    Referenced from:
+        plot_bezier (obj/vickyGraph.o unit 1 section index 26)
+        plot_ellipse (obj/vickyGraph.o unit 1 section index 30)
+        plot_solid_ellipse (obj/vickyGraph.o unit 1 section index 31)
+        plot_solid_circle (obj/vickyGraph.o unit 1 section index 32)
+        (obj/vickyGraph.o unit 1 section index 76)
+
+__lib_wrflush in section 'farcode'
+ placed at address 044626-044644 of size 00001f
+(lib_wrflush.o (from clib-lc-sd-Foenix.a) unit 40 section index 2)
+    Defines:
+        __lib_wrflush = 044626
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        __lib_fflush in (lib_libfflush.o (from clib-lc-sd-Foenix.a) unit 30 section index 2)
+    Referenced from:
+        fseek (lib_fseek.o (from clib-lc-sd-Foenix.a) unit 37 section index 2)
+
+setBorderColor in section 'farcode'
+ placed at address 044645-044663 of size 00001f
+(obj/vickyGraph.o unit 1 section index 16)
+    Defines:
+        setBorderColor = 044645
+
+`?L1127` in section 'farcode'  placed at address 044664-044681 of size 00001e
+(obj/vickyGraph.o unit 1 section index 43)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        vickyBitmapPage in (obj/vickyGraph.o unit 1 section index 6)
+
+`?L1115` in section 'farcode'  placed at address 044682-04469e of size 00001d
+(obj/vickyGraph.o unit 1 section index 39)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Float32Mul in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+
+printf in section 'farcode'  placed at address 04469f-0446b9 of size 00001b
+(lib_printf.o (from clib-lc-sd-Foenix.a) unit 14 section index 2)
+    Defines:
+        printf = 04469f
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        __global_streams in (streamlist.o (from clib-lc-sd-Foenix.a) unit 41 section index 4)
+        vfprintf in (lib_vfprintf.o (from clib-lc-sd-Foenix.a) unit 15 section index 2)
+    Referenced from:
+        main (obj/main.o unit 0 section index 2)
+        setupScreen (obj/main.o unit 0 section index 3)
+        ANSILocate (obj/vickyGraph.o unit 1 section index 10)
+        ANSIClrScr (obj/vickyGraph.o unit 1 section index 11)
+        ANSIScrSize (obj/vickyGraph.o unit 1 section index 12)
+        vickyVideomode (obj/vickyGraph.o unit 1 section index 13)
+        vickyBitmap (obj/vickyGraph.o unit 1 section index 14)
+        vram2dram_linearCopy (obj/vickyGraph.o unit 1 section index 23)
+
+time in section 'farcode'  placed at address 0446ba-0446d4 of size 00001b
+(time.o (from clib-lc-sd-Foenix.a) unit 48 section index 2)
+    Defines:
+        time = 0446ba
+    References:
+        _Const_ffffffffffffffff in (time.o (from clib-lc-sd-Foenix.a) unit 48 section index 3)
+    Referenced from:
+        main (obj/main.o unit 0 section index 2)
+        delay (obj/main.o unit 0 section index 5)
+
+stackPeek in section 'farcode'  placed at address 0446d5-0446ef of size 00001b
+(obj/vickyGraph.o unit 1 section index 35)
+    Defines:
+        stackPeek = 0446d5
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        stack in (obj/vickyGraph.o unit 1 section index 2)
+        stackTop in (obj/vickyGraph.o unit 1 section index 3)
+
+`?L72` in section 'farcode'  placed at address 0446f0-044709 of size 00001a
+(obj/main.o unit 0 section index 6)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        delay in (obj/main.o unit 0 section index 5)
+
+`?L1136` in section 'farcode'  placed at address 04470a-044721 of size 000018
+(obj/vickyGraph.o unit 1 section index 50)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Mul32 in (integer.o (from clib-lc-sd-Foenix.a) unit 25 section index 3)
+        vickyResX in (obj/vickyGraph.o unit 1 section index 4)
+        vickyResY in (obj/vickyGraph.o unit 1 section index 5)
+
+`?L1142` in section 'farcode'  placed at address 044722-044738 of size 000017
+(obj/vickyGraph.o unit 1 section index 55)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        plot_line in (obj/vickyGraph.o unit 1 section index 28)
+
+`?L1141` in section 'farcode'  placed at address 044739-04474f of size 000017
+(obj/vickyGraph.o unit 1 section index 54)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        plot_line in (obj/vickyGraph.o unit 1 section index 28)
+
+`?L1139` in section 'farcode'  placed at address 044750-044766 of size 000017
+(obj/vickyGraph.o unit 1 section index 53)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        plot_line in (obj/vickyGraph.o unit 1 section index 28)
+
+`?L1138` in section 'farcode'  placed at address 044767-04477d of size 000017
+(obj/vickyGraph.o unit 1 section index 52)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        plot_line in (obj/vickyGraph.o unit 1 section index 28)
+
+`?L1137` in section 'farcode'  placed at address 04477e-044794 of size 000017
+(obj/vickyGraph.o unit 1 section index 51)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        plot_line in (obj/vickyGraph.o unit 1 section index 28)
+
+`?L122` in section 'farcode'  placed at address 044795-0447aa of size 000016
+(lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 4)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+_DivModSign32 in section 'farcode'
+ placed at address 0447ab-0447c0 of size 000016
+(integer.o (from clib-lc-sd-Foenix.a) unit 25 section index 14)
+    Defines:
+        _DivModSign32 = 0447ab
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L1148` in section 'farcode'  placed at address 0447c1-0447d6 of size 000016
+(obj/vickyGraph.o unit 1 section index 60)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Mul32 in (integer.o (from clib-lc-sd-Foenix.a) unit 25 section index 3)
+        vickyResX in (obj/vickyGraph.o unit 1 section index 4)
+
+`?L1143` in section 'farcode'  placed at address 0447d7-0447ec of size 000016
+(obj/vickyGraph.o unit 1 section index 56)
+    References:
+        DMA_wait_delay in (dma-lc-sd.o (from Foenix-lc-sd.a) unit 58 section index 2)
+        wait_for_DMA_to_finish in (vdma_wait-lc-sd.o (from Foenix-lc-sd.a) unit 57 section index 2)
+
+wait_for_DMA_to_finish in section 'farcode'
+ placed at address 0447ed-044801 of size 000015
+(vdma_wait-lc-sd.o (from Foenix-lc-sd.a) unit 57 section index 2)
+    Defines:
+        wait_for_DMA_to_finish = 0447ed
+    Referenced from:
+        vram2dram_linearCopy (obj/vickyGraph.o unit 1 section index 23)
+        (obj/vickyGraph.o unit 1 section index 56)
+
+`?L1151` in section 'farcode'  placed at address 044802-044816 of size 000015
+(obj/vickyGraph.o unit 1 section index 62)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L626` in section 'farcode'  placed at address 044817-04482a of size 000014
+(__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 9)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L1124` in section 'farcode'  placed at address 04482b-04483e of size 000014
+(obj/vickyGraph.o unit 1 section index 41)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Mul32 in (integer.o (from clib-lc-sd-Foenix.a) unit 25 section index 3)
+        vickyResX in (obj/vickyGraph.o unit 1 section index 4)
+
+`?L123` in section 'farcode'  placed at address 04483f-044851 of size 000013
+(lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 5)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+_Float32ToUInt64 in section 'farcode'
+ placed at address 044852-044864 of size 000013
+(float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 13)
+    Defines:
+        _Float32ToUInt64 = 044852
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+    Referenced from:
+        __dtoa_engine (lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 2)
+
+`?L627` in section 'farcode'  placed at address 044865-044876 of size 000012
+(__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 10)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+abs in section 'farcode'  placed at address 044877-044888 of size 000012
+(lib_abs.o (from clib-lc-sd-Foenix.a) unit 60 section index 2)
+    Defines:
+        abs = 044877
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+    Referenced from:
+        plot_line (obj/vickyGraph.o unit 1 section index 28)
+
+`?L1158` in section 'farcode'  placed at address 044889-04489a of size 000012
+(obj/vickyGraph.o unit 1 section index 68)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Float32Div in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+        _Float32Mul in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+
+`?L1128` in section 'farcode'  placed at address 04489b-0448ac of size 000012
+(obj/vickyGraph.o unit 1 section index 44)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Float32Add in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+        _SInt32ToFloat32 in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 6)
+
+`?L1126` in section 'farcode'  placed at address 0448ad-0448be of size 000012
+(obj/vickyGraph.o unit 1 section index 42)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Float32Sub in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+
+`?L124` in section 'farcode'  placed at address 0448bf-0448cf of size 000011
+(lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 6)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+plot in section 'farcode'  placed at address 0448d0-0448e0 of size 000011
+(obj/vickyGraph.o unit 1 section index 21)
+    Defines:
+        plot = 0448d0
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+isStackFull in section 'farcode'
+ placed at address 0448e1-0448f0 of size 000010
+(obj/vickyGraph.o unit 1 section index 34)
+    Defines:
+        isStackFull = 0448e1
+    References:
+        stackTop in (obj/vickyGraph.o unit 1 section index 3)
+    Referenced from:
+        stackPush (obj/vickyGraph.o unit 1 section index 37)
+
+`?L1121` in section 'farcode'  placed at address 0448f1-0448ff of size 00000f
+(obj/vickyGraph.o unit 1 section index 40)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Float32Mul in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+
+`?L624` in section 'farcode'  placed at address 044900-04490d of size 00000e
+(__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 7)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+stdoutstream_flush in section 'farcode'
+ placed at address 04490e-04491b of size 00000e
+(lib_stdoutstream.o (from clib-lc-sd-Foenix.a) unit 26 section index 3)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        __lib_fflush in (lib_libfflush.o (from clib-lc-sd-Foenix.a) unit 30 section index 2)
+
+_JmpIndLong in section 'farcode'
+ placed at address 04491c-044929 of size 00000e
+(controlFlow.o (from clib-lc-sd-Foenix.a) unit 9 section index 3)
+    Defines:
+        _JmpIndLong = 04491c
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+    Referenced from:
+        exit (exit.o (from clib-lc-sd-Foenix.a) unit 7 section index 3)
+        _Exit (exitC99.o (from clib-lc-sd-Foenix.a) unit 10 section index 3)
+        __vsprintf (__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 6)
+
+`?L1171` in section 'farcode'  placed at address 04492a-044937 of size 00000e
+(obj/vickyGraph.o unit 1 section index 79)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L1170` in section 'farcode'  placed at address 044938-044945 of size 00000e
+(obj/vickyGraph.o unit 1 section index 78)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L1164` in section 'farcode'  placed at address 044946-044953 of size 00000e
+(obj/vickyGraph.o unit 1 section index 73)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        getScanLine in (obj/vickyGraph.o unit 1 section index 19)
+
+`?L1146` in section 'farcode'  placed at address 044954-044961 of size 00000e
+(obj/vickyGraph.o unit 1 section index 58)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+ANSIScrSize in section 'farcode'
+ placed at address 044962-04496f of size 00000e
+(obj/vickyGraph.o unit 1 section index 12)
+    Defines:
+        ANSIScrSize = 044962
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        `_StringLiteral_[27,101,91,56,59,37,100,44,37,100,59,49,72]` in (obj/vickyGraph.o unit 1 section index 102)
+        printf in (lib_printf.o (from clib-lc-sd-Foenix.a) unit 14 section index 2)
+    Referenced from:
+        vickyVideomode (obj/vickyGraph.o unit 1 section index 13)
+
+ANSILocate in section 'farcode'  placed at address 044970-04497d of size 00000e
+(obj/vickyGraph.o unit 1 section index 10)
+    Defines:
+        ANSILocate = 044970
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        `_StringLiteral_[27,91,37,100,59,37,100,72]` in (obj/vickyGraph.o unit 1 section index 100)
+        printf in (lib_printf.o (from clib-lc-sd-Foenix.a) unit 14 section index 2)
+    Referenced from:
+        setupScreen (obj/main.o unit 0 section index 3)
+
+`?L73` in section 'farcode'  placed at address 04497e-04498b of size 00000e
+(obj/main.o unit 0 section index 7)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L630` in section 'farcode'  placed at address 04498c-044998 of size 00000d
+(__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 12)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L126` in section 'farcode'  placed at address 044999-0449a5 of size 00000d
+(lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 8)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L125` in section 'farcode'  placed at address 0449a6-0449b2 of size 00000d
+(lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 7)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L1182` in section 'farcode'  placed at address 0449b3-0449bf of size 00000d
+(obj/vickyGraph.o unit 1 section index 88)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _SInt32ToFloat32 in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 6)
+
+`?L1172` in section 'farcode'  placed at address 0449c0-0449cc of size 00000d
+(obj/vickyGraph.o unit 1 section index 80)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Float32GE in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 5)
+
+`?L1153` in section 'farcode'  placed at address 0449cd-0449d9 of size 00000d
+(obj/vickyGraph.o unit 1 section index 64)
+    References:
+        vickyResX in (obj/vickyGraph.o unit 1 section index 4)
+        vickyResY in (obj/vickyGraph.o unit 1 section index 5)
+
+`?L1152` in section 'farcode'  placed at address 0449da-0449e6 of size 00000d
+(obj/vickyGraph.o unit 1 section index 63)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L1150` in section 'farcode'  placed at address 0449e7-0449f3 of size 00000d
+(obj/vickyGraph.o unit 1 section index 61)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L1147` in section 'farcode'  placed at address 0449f4-044a00 of size 00000d
+(obj/vickyGraph.o unit 1 section index 59)
+
+`?L1132` in section 'farcode'  placed at address 044a01-044a0d of size 00000d
+(obj/vickyGraph.o unit 1 section index 47)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+isStackEmpty in section 'farcode'
+ placed at address 044a0e-044a1a of size 00000d
+(obj/vickyGraph.o unit 1 section index 33)
+    Defines:
+        isStackEmpty = 044a0e
+    References:
+        stackTop in (obj/vickyGraph.o unit 1 section index 3)
+    Referenced from:
+        stackPop (obj/vickyGraph.o unit 1 section index 36)
+
+`?L37` in section 'farcode'  placed at address 044a1b-044a26 of size 00000c
+(lib_libfflush.o (from clib-lc-sd-Foenix.a) unit 30 section index 3)
+
+`?L6` in section 'farcode'  placed at address 044a27-044a32 of size 00000c
+(_rand48.o (from clib-lc-sd-Foenix.a) unit 46 section index 3)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L1185` in section 'farcode'  placed at address 044a33-044a3e of size 00000c
+(obj/vickyGraph.o unit 1 section index 90)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        stackPush in (obj/vickyGraph.o unit 1 section index 37)
+
+`?L1184` in section 'farcode'  placed at address 044a3f-044a4a of size 00000c
+(obj/vickyGraph.o unit 1 section index 89)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L1195` in section 'farcode'  placed at address 044a4b-044a55 of size 00000b
+(obj/vickyGraph.o unit 1 section index 98)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L1194` in section 'farcode'  placed at address 044a56-044a60 of size 00000b
+(obj/vickyGraph.o unit 1 section index 97)
+
+`?L1192` in section 'farcode'  placed at address 044a61-044a6b of size 00000b
+(obj/vickyGraph.o unit 1 section index 95)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L1191` in section 'farcode'  placed at address 044a6c-044a76 of size 00000b
+(obj/vickyGraph.o unit 1 section index 94)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L1189` in section 'farcode'  placed at address 044a77-044a81 of size 00000b
+(obj/vickyGraph.o unit 1 section index 92)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L1179` in section 'farcode'  placed at address 044a82-044a8c of size 00000b
+(obj/vickyGraph.o unit 1 section index 86)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        plot_line in (obj/vickyGraph.o unit 1 section index 28)
+
+`?L1163` in section 'farcode'  placed at address 044a8d-044a97 of size 00000b
+(obj/vickyGraph.o unit 1 section index 72)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        vickyResY in (obj/vickyGraph.o unit 1 section index 5)
+
+`?L1161` in section 'farcode'  placed at address 044a98-044aa2 of size 00000b
+(obj/vickyGraph.o unit 1 section index 70)
+    References:
+        stack in (obj/vickyGraph.o unit 1 section index 2)
+        stackTop in (obj/vickyGraph.o unit 1 section index 3)
+
+`?L1160` in section 'farcode'  placed at address 044aa3-044aad of size 00000b
+(obj/vickyGraph.o unit 1 section index 69)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L1154` in section 'farcode'  placed at address 044aae-044ab8 of size 00000b
+(obj/vickyGraph.o unit 1 section index 65)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Float32Sub in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+
+`?L1134` in section 'farcode'  placed at address 044ab9-044ac3 of size 00000b
+(obj/vickyGraph.o unit 1 section index 48)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L1193` in section 'farcode'  placed at address 044ac4-044acd of size 00000a
+(obj/vickyGraph.o unit 1 section index 96)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Float32LT in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 3)
+
+`?L1180` in section 'farcode'  placed at address 044ace-044ad7 of size 00000a
+(obj/vickyGraph.o unit 1 section index 87)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _SInt32ToFloat32 in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 6)
+
+`?L1157` in section 'farcode'  placed at address 044ad8-044ae1 of size 00000a
+(obj/vickyGraph.o unit 1 section index 67)
+    References:
+        vickyResY in (obj/vickyGraph.o unit 1 section index 5)
+
+`?L1145` in section 'farcode'  placed at address 044ae2-044aeb of size 00000a
+(obj/vickyGraph.o unit 1 section index 57)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        pow in (obj/vickyGraph.o unit 1 section index 27)
+
+`?L1135` in section 'farcode'  placed at address 044aec-044af5 of size 00000a
+(obj/vickyGraph.o unit 1 section index 49)
+
+`?L121` in section 'farcode'  placed at address 044af6-044afe of size 000009
+(lib_dtoa_engine.o (from clib-lc-sd-Foenix.a) unit 22 section index 3)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L1187` in section 'farcode'  placed at address 044aff-044b07 of size 000009
+(obj/vickyGraph.o unit 1 section index 91)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+        _Float32Add in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 16)
+
+`?L1178` in section 'farcode'  placed at address 044b08-044b10 of size 000009
+(obj/vickyGraph.o unit 1 section index 85)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L1177` in section 'farcode'  placed at address 044b11-044b19 of size 000009
+(obj/vickyGraph.o unit 1 section index 84)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L1176` in section 'farcode'  placed at address 044b1a-044b22 of size 000009
+(obj/vickyGraph.o unit 1 section index 83)
+
+`?L1175` in section 'farcode'  placed at address 044b23-044b2b of size 000009
+(obj/vickyGraph.o unit 1 section index 82)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+`?L1174` in section 'farcode'  placed at address 044b2c-044b34 of size 000009
+(obj/vickyGraph.o unit 1 section index 81)
+
+`?L1167` in section 'farcode'  placed at address 044b35-044b3d of size 000009
+(obj/vickyGraph.o unit 1 section index 76)
+    References:
+        _Float32ToSInt32 in (float32.o (from clib-lc-sd-Foenix.a) unit 23 section index 9)
+
+`?L1162` in section 'farcode'  placed at address 044b3e-044b46 of size 000009
+(obj/vickyGraph.o unit 1 section index 71)
+    References:
+        vBitPlane in (obj/vickyGraph.o unit 1 section index 8)
+        vickyBitmapPage in (obj/vickyGraph.o unit 1 section index 6)
+
+`?L1130` in section 'farcode'  placed at address 044b47-044b4f of size 000009
+(obj/vickyGraph.o unit 1 section index 45)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+srand in section 'farcode'  placed at address 044b50-044b57 of size 000008
+(rand.o (from clib-lc-sd-Foenix.a) unit 44 section index 3)
+    Defines:
+        srand = 044b50
+    References:
+        __srand48 in (srand48.o (from clib-lc-sd-Foenix.a) unit 45 section index 2)
+    Referenced from:
+        main (obj/main.o unit 0 section index 2)
+
+_Stub_putchar in section 'farcode'
+ placed at address 044b58-044b5f of size 000008
+(stub_putchar-lc-sd.o (from Foenix-lc-sd.a) unit 34 section index 2)
+    Defines:
+        _Stub_putchar = 044b58
+    Referenced from:
+        _Stub_write (stub_write-lc-sd.o (from Foenix-lc-sd.a) unit 32 section index 2)
+
+`?L1169` in section 'farcode'  placed at address 044b60-044b67 of size 000008
+(obj/vickyGraph.o unit 1 section index 77)
+    References:
+        vickyResY in (obj/vickyGraph.o unit 1 section index 5)
+
+`?L1166` in section 'farcode'  placed at address 044b68-044b6f of size 000008
+(obj/vickyGraph.o unit 1 section index 75)
+
+`?L1165` in section 'farcode'  placed at address 044b70-044b77 of size 000008
+(obj/vickyGraph.o unit 1 section index 74)
+
+`?L1156` in section 'farcode'  placed at address 044b78-044b7f of size 000008
+(obj/vickyGraph.o unit 1 section index 66)
+    References:
+        vickyResX in (obj/vickyGraph.o unit 1 section index 4)
+
+ANSIClrScr in section 'farcode'  placed at address 044b80-044b87 of size 000008
+(obj/vickyGraph.o unit 1 section index 11)
+    Defines:
+        ANSIClrScr = 044b80
+    References:
+        `_StringLiteral_[27,91,50,74]` in (obj/vickyGraph.o unit 1 section index 101)
+        printf in (lib_printf.o (from clib-lc-sd-Foenix.a) unit 14 section index 2)
+    Referenced from:
+        main (obj/main.o unit 0 section index 2)
+        setupScreen (obj/main.o unit 0 section index 3)
+
+`?L632` in section 'farcode'  placed at address 044b88-044b8e of size 000007
+(__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 14)
+
+`?L631` in section 'farcode'  placed at address 044b8f-044b95 of size 000007
+(__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 13)
+
+`?L629` in section 'farcode'  placed at address 044b96-044b9c of size 000007
+(__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 11)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+_Stub_lseek in section 'farcode'
+ placed at address 044b9d-044ba3 of size 000007
+(stub_lseek-lc-sd.o (from Foenix-lc-sd.a) unit 39 section index 2)
+    Defines:
+        _Stub_lseek = 044b9d
+    Referenced from:
+        fseek (lib_fseek.o (from clib-lc-sd-Foenix.a) unit 37 section index 2)
+
+`?L1190` in section 'farcode'  placed at address 044ba4-044baa of size 000007
+(obj/vickyGraph.o unit 1 section index 93)
+    References:
+        vickyResX in (obj/vickyGraph.o unit 1 section index 4)
+
+`?L625` in section 'farcode'  placed at address 044bab-044bb0 of size 000006
+(__vsprintf_float.o (from clib-lc-sd-Foenix.a) unit 16 section index 8)
+    References:
+        _Dp in (pseudoRegisters.o (from clib-lc-sd-Foenix.a) unit 6 section index 2)
+
+rand in section 'farcode'  placed at address 044bb1-044bb5 of size 000005
+(rand.o (from clib-lc-sd-Foenix.a) unit 44 section index 2)
+    Defines:
+        rand = 044bb1
+    References:
+        __lrand48 in (lrand48.o (from clib-lc-sd-Foenix.a) unit 47 section index 2)
+
+__lib_noflush in section 'farcode'
+ placed at address 044bb6-044bb9 of size 000004
+(lib_libnoflush.o (from clib-lc-sd-Foenix.a) unit 27 section index 2)
+    Defines:
+        __lib_noflush = 044bb6
+    Referenced from:
+        __lib_stdoutstream (lib_stdoutstream.o (from clib-lc-sd-Foenix.a) unit 26 section index 4)
+
+_Stub_close in section 'farcode'
+ placed at address 044bba-044bbd of size 000004
+(stub_close-lc-sd.o (from Foenix-lc-sd.a) unit 43 section index 2)
+    Defines:
+        _Stub_close = 044bba
+    Referenced from:
+        (streamlist.o (from clib-lc-sd-Foenix.a) unit 41 section index 2)
+
+__low_level_init in section 'farcode'
+ placed at address 044bbe-044bbe of size 000001
+(Foenix-startup-lc-sd.o (from Foenix-lc-sd.a) unit 5 section index 7)
+    Defines:
+        __low_level_init = 044bbe
+    Referenced from:
+        __program_root_section (Foenix-startup-lc-sd.o (from Foenix-lc-sd.a) unit 5 section index 2)
+
+Section 'ipalette0'  placed at address 030000-0303ff of size 000400
+(obj/vickyGraph.o unit 1 initializer for section index 9)
+
+Section 'idata'  placed at address 030400-030401 of size 000002
+(_rand48.o (from clib-lc-sd-Foenix.a) unit 46 initializer for section index 6)
+
+Section 'idata'  placed at address 030402-030407 of size 000006
+(_rand48.o (from clib-lc-sd-Foenix.a) unit 46 initializer for section index 5)
+
+Section 'idata'  placed at address 030408-03040d of size 000006
+(_rand48.o (from clib-lc-sd-Foenix.a) unit 46 initializer for section index 4)
+
+palette in section 'palette0'  placed at address af2000-af23ff of size 000400
+(obj/vickyGraph.o unit 1 section index 9)
+    Defines:
+        palette = af2000
+
+##########################
+#                        #
+# Memory sizes (decimal) #
+#                        #
+##########################
+
+Executable       (Text): 21080 bytes
+Data                   :  1784 bytes
+Non-initialized        :  4119 bytes

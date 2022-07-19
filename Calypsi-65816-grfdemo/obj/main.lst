@@ -1,0 +1,583 @@
+###############################################################################
+#                                                                             #
+# Calypsi ISO C compiler for 65816                              version 3.6.2 #
+#                                                       16/Jul/2022  23:32:14 #
+# Command line: --core=65816 --code-model=large --data-model=small            #
+#               --target=Foenix -I ./include --speed -O2 --debug              #
+#               --list-file=obj/main.lst -o obj/main.o src/main.c             #
+#                                                                             #
+###############################################################################
+
+    \ 000000                      .rtmodel version,"1"
+    \ 000000                      .rtmodel codeModel,"large"
+    \ 000000                      .rtmodel dataModel,"small"
+    \ 000000                      .rtmodel core,"65816"
+    \ 000000                      .rtmodel huge,"0"
+    \ 000000                      .rtmodel doubleSize,"32"
+    \ 000000                      .rtmodel target,"foenix"
+    \ 000000                      .extern ANSIClrScr
+    \ 000000                      .extern ANSILocate
+    \ 000000                      .extern _Dp
+    \ 000000                      .extern _Vfp
+    \ 000000                      .extern clrBitmap
+    \ 000000                      .extern printf
+    \ 000000                      .extern srand
+    \ 000000                      .extern time
+    \ 000000                      .extern vickyBitmap
+    \ 000000                      .extern vickyVideomode
+0001                  // ----------------------------------------------------
+0002                  // Source Code for Resolution Independent Graphics Primitives & Vicky II Wrapper Functions
+0003                  // Theoretically It Should Work on Foenix c256 U, Foenix C256 u+, FMX
+0004                  // By Ernesto Contreras
+0005                  // June 2022
+0006                  // ----------------------------------------------------
+0007
+0008                  #include <stdio.h>
+0009                  #include <stdlib.h>
+0010                  #include <string.h>
+0011                  #include <dma.h>
+0012                  #include <time.h>
+0013                  //#include <math.h>
+0014                  #include "support.h"
+0015                  #include "vickyGraph.h"
+0016
+0017                  // Demo Helper functions
+0018                  int setupScreen(int mode);
+0019                  void delay(int delay);
+0020                  void shake(int repetitions);
+0021
+0022                  // Global Variables that hold screen resolution / current bitmap page / maxVickyMemory 
+0023                  long extern vickyResX;
+0024                  long extern vickyResY;
+0025
+0026                  // ----------------------
+0027                  // Main demo 
+0028                  // ----------------------
+0029
+0030                  int main ()
+0031                  {
+    \ 000000                      .section farcode,text
+    \ 000000                      .public main
+    \ 000000 5a       main:       phy
+    \ 000001 5a                   phy
+    \ 000002 5a                   phy
+    \ 000003 5a                   phy
+0032                    int xRndInit;
+0033                    int xRndMid;
+0034                    int xRndMid2;
+0035                    int xRndEnd;
+0036                    int yRndInit;
+0037                    int yRndMid;
+0038                    int yRndMid2;
+0039                    int yRndEnd;
+0040                    int colRnd;
+0041                    int c;
+0042                    char option;
+0043                    ANSIClrScr();
+    \ 000004 22......             jsl     long:ANSIClrScr
+0044
+0045                  	if (setupScreen(3)==0)
+    \ 000008 a90300               lda     ##3
+    \ 00000b 22......             jsl     long:setupScreen
+    \ 00000f 1a                   inc     a
+    \ 000010 3a                   dec     a
+    \ 000011 d037                 bne     `?L8`
+0046                  	{
+0047                  		ANSIClrScr();
+    \ 000013 22......             jsl     long:ANSIClrScr
+0048                  		clrBitmap();
+    \ 000017 22......             jsl     long:clrBitmap
+0049                  		c=time(NULL);
+    \ 00001b a20000               ldx     ##0
+    \ 00001e 86..                 stx     dp:.tiny _Dp
+    \ 000020 3b                   tsc
+    \ 000021 1a                   inc     a
+    \ 000022 22......             jsl     long:time
+    \ 000026 a301                 lda     1,s
+0050                  		srand(c); 
+    \ 000028 22......             jsl     long:srand
+0051                  		printf("Time %d\r",c);
+    \ 00002c a301                 lda     1,s
+    \ 00002e 48                   pha
+    \ 00002f a9....               lda     ##`_StringLiteral_[84,105,109,101,32,37,100,13]`
+    \ 000032 22......             jsl     long:printf
+0052                  		shake(200);
+    \ 000036 68                   pla
+    \ 000037 a9c800               lda     ##200
+    \ 00003a 22......             jsl     long:shake
+0053                  		/*
+0054                  		printf("30000 Pixels...\r");
+0055                  		 for (c=0;c<=30000;c++)
+0056                  		  {
+0057                  			xRndInit=rand() % (int)vickyResX;
+0058                  			yRndInit=rand() % (int)vickyResY;
+0059                  			colRnd=rand() % 255;
+0060                  			plot (xRndInit, yRndInit, colRnd);
+0061                  		  } 
+0062                  		  shake(20);
+0063                  		  clrBitmap();
+0064                  		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+0065                  		  ANSILocate(1,1);
+0066                  		printf("200 Lines...\n\r");
+0067                  		 for (c=0;c<=200;c++)
+0068                  		  {
+0069                  			xRndInit=rand() % (int)vickyResX;
+0070                  			xRndEnd=rand() % (int)vickyResX;
+0071                  			yRndInit=rand() % (int)vickyResY;
+0072                  			yRndEnd=rand() % (int)vickyResY;
+0073                  			colRnd=rand() % 255;
+0074                  			plot_line (xRndInit, yRndInit, xRndEnd, yRndEnd, colRnd);
+0075                  		  } 
+0076                  		  clrBitmap();
+0077                  		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+0078                  		  ANSILocate(1,1);
+0079                  		 printf("100 Bezier Lines...\n\r");
+0080                  		 for (c=0;c<=100;c++)
+0081                  		  {
+0082                  			xRndInit=rand() % (int)vickyResX;
+0083                  			xRndEnd=rand() % (int)vickyResX;
+0084                  			xRndMid=rand() % (int)vickyResX;
+0085                  			xRndMid2=rand() % (int)vickyResX;
+0086                  			yRndInit=rand() % (int)vickyResY;
+0087                  			yRndMid=rand() % (int)vickyResY;
+0088                  			yRndMid2=rand() % (int)vickyResY;
+0089                  			yRndEnd=rand() % (int)vickyResY;
+0090                  			colRnd=rand() % 255;
+0091                  			plot_bezier (xRndInit, yRndInit, xRndMid, yRndMid,  xRndMid2, yRndMid2, xRndEnd, yRndEnd, colRnd);
+0092                  		  } 
+0093                  		  clrBitmap();
+0094                  		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+0095                  		  ANSILocate(1,1);
+0096                  		  printf("50 Rectangles...\n\r");
+0097                  		  for (c=0;c<=50;c++)
+0098                  		  {
+0099                  			xRndInit=rand() % (int)vickyResX;
+0100                  			xRndEnd=rand() % (int)vickyResX;
+0101                  			xRndMid=rand() % (int)vickyResX;
+0102                  			yRndMid=rand() % (int)vickyResY;
+0103                  			yRndInit=(rand() % (int)vickyResY);
+0104                  			yRndEnd=(rand() % (int)vickyResY);
+0105                  			colRnd=rand() % 255;
+0106                  			plot_rectangle (xRndInit, yRndInit, xRndEnd, yRndEnd, colRnd);
+0107                  		  } 
+0108                  		  clrBitmap();
+0109                  		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+0110                  		  ANSILocate(1,1);
+0111                  		  printf("50 Circles...\n\r");
+0112                  		 for (c=0;c<=50;c++)
+0113                  		  {
+0114                  			xRndInit=rand() % (int)vickyResX;
+0115                  			yRndInit=rand() % (int)vickyResY;
+0116                  			yRndMid=(rand() % (int)vickyResY);
+0117                  			colRnd=rand() % 255;
+0118                  			plot_circle (xRndInit, yRndInit, (yRndMid / 2),colRnd);
+0119                  		  } 
+0120                  		  clrBitmap();
+0121                  		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+0122                  		  ANSILocate(1,1);
+0123                   		  printf("50 Ellipses...\n\r");
+0124                  		  for (c=0;c<=50;c++)
+0125                  		  {
+0126                  			xRndInit=rand() % (int)vickyResX;
+0127                  			xRndEnd=rand() % (int)vickyResX;
+0128                  			xRndMid=rand() % (int)vickyResX;
+0129                  			yRndMid=rand() % (int)vickyResY;
+0130                  			yRndInit=rand() % (int)vickyResY;
+0131                  			yRndEnd=rand() % (int)vickyResY;
+0132                  			colRnd=rand() % 255;
+0133                  			plot_ellipse (xRndInit, yRndInit, xRndEnd/2, yRndEnd/2, colRnd);
+0134                  		  }
+0135                  		  clrBitmap();
+0136                  		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+0137                  		  ANSILocate(1,1);
+0138                   		  printf("30 Solid Ellipses... \n\r");
+0139                  		  for (c=0;c<=30;c++)
+0140                  		  {
+0141                  			xRndInit=rand() % (int)vickyResX;
+0142                  			xRndEnd=rand() % (int)vickyResX;
+0143                  			xRndMid=rand() % (int)vickyResX;
+0144                  			yRndMid=rand() % (int)vickyResY;
+0145                  			yRndInit=rand() % (int)vickyResY;
+0146                  			yRndEnd=rand() % (int)vickyResY;
+0147                  			colRnd=rand() % 255;
+0148                  			plot_solid_ellipse (xRndInit, yRndInit, xRndEnd / 2, yRndEnd / 2, colRnd);
+0149                  		  }
+0150                  		  clrBitmap();
+0151                  		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+0152                  		  ANSILocate(1,1);
+0153                  		 printf("30 Solid circles... \n\r");
+0154                  		 srand(time(NULL)); 
+0155                  		 for (c=0;c<=30;c++)
+0156                  		  {
+0157                  			xRndInit=rand() % (int)vickyResX;
+0158                  			yRndInit=rand() % (int)vickyResY;
+0159                  			yRndMid=rand() % (int)vickyResY;
+0160                  			colRnd=rand() % 255;
+0161                  			plot_solid_circle (xRndInit, yRndInit, yRndMid / 2,colRnd);
+0162                  		  } 
+0163                  		  clrBitmap();
+0164                  		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+0165                  		  ANSILocate(1,1);
+0166                  		  printf("300 Solid Rectangles...\n\r");
+0167                  		  	  for (c=0;c<=300;c++)
+0168                  		  {
+0169                  			xRndInit=rand() % (int)vickyResX;
+0170                  			xRndEnd=rand() % (int)vickyResX;
+0171                  			xRndMid=rand() % (int)vickyResX;
+0172                  			yRndMid=rand() % (int)vickyResY;
+0173                  			yRndInit=rand() % (int)vickyResY;
+0174                  			yRndEnd=rand() % (int)vickyResY;
+0175                  			colRnd=rand() % 255;
+0176                  			plot_solid_rectangle (xRndInit, yRndInit, xRndEnd, yRndEnd, colRnd);
+0177                  		  } 
+0178                  		  
+0179                  		  clrBitmap();
+0180                  		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+0181                  		  ANSILocate(1,1);
+0182                  		  printf("10 Flood Filled Circles...\n\r");
+0183                  		  srand(time(NULL)); 
+0184                  		  for (c=0;c<=10;c++)
+0185                  		  {
+0186                  			xRndInit=rand() % (int)vickyResX;
+0187                  			yRndInit=rand() % (int)vickyResY;
+0188                  			yRndMid=rand() % (int)vickyResY;
+0189                  			colRnd=rand() % 255;
+0190                  			plot_circle (xRndInit, yRndInit, (yRndMid / 2),colRnd);
+0191                  			colRnd=rand() % 255;
+0192                  			floodFill (xRndInit, yRndInit,colRnd);
+0193                  		  } 
+0194                  		  clrBitmap();
+0195                  		  c=vickyVideomode (true,false,false,false,false,false,false,0);
+0196                  		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+0197                  		  ANSILocate(1,1);
+0198                  		  */
+0199                  		  printf("Thx for watching this demo\n\r");
+    \ 00003e a9....               lda     ##`_StringLiteral_[84,104,120,32,102,111,114,32,119,97,116,99,104,105,110,103,32,116,104,105,115,32,100,101,109,111,10,13]`
+    \ 000041 22......             jsl     long:printf
+0200                  		  return 0;
+    \ 000045 a90000               lda     ##0
+    \ 000048 8003                 bra     `?L7`
+    \ 00004a          `?L8`:
+0201                    } // screen
+0202                    else {return -1;}
+    \ 00004a a9ffff               lda     ##-1
+    \ 00004d          `?L7`:
+0203                  }
+    \ 00004d 7a                   ply
+    \ 00004e 7a                   ply
+    \ 00004f 7a                   ply
+    \ 000050 7a                   ply
+    \ 000051 6b                   rtl
+0204
+0205
+0206
+0207                  // ----------------------------------------
+0208                  // Helper functions 
+0209                  // ----------------------------------------
+0210
+0211                  // ----------------------------------------
+0212                  // Setup Graphic Screen
+0213                  // ----------------------------------------
+0214                  int setupScreen(int mode)
+0215                  {
+    \ 000000                      .section farcode,text
+    \ 000000                      .public setupScreen
+    \ 000000          setupScreen:
+    \ 000000 5a                   phy
+    \ 000001 5a                   phy
+0216                  	int status;
+0217                  	// VickyVideoMode (bool text,bool txtOverlay,bool bitmap,bool tiles,bool sprites,bool gammaFix,bool blank,int resolution {0-640x480|1-800x600|2-320x240|3-400x300})
+0218                  	status=vickyVideomode (true,true,true,false,true,true,false,mode);
+    \ 000002 48                   pha
+    \ 000003 f40000               pea     ##0
+    \ 000006 f40100               pea     ##1
+    \ 000009 f40100               pea     ##1
+    \ 00000c f40000               pea     ##0
+    \ 00000f a20100               ldx     ##1
+    \ 000012 86..                 stx     dp:.tiny (_Dp+2)
+    \ 000014 86..                 stx     dp:.tiny _Dp
+    \ 000016 8a                   txa
+    \ 000017 22......             jsl     long:vickyVideomode
+    \ 00001b aa                   tax
+    \ 00001c 3b                   tsc
+    \ 00001d 18                   clc
+    \ 00001e 690a00               adc     ##10
+    \ 000021 1b                   tcs
+    \ 000022 8a                   txa
+    \ 000023 8303                 sta     3,s
+0219                  	// VickyBitmap (int page {0-1}, bool enable, long address {0-0x1fffff (2 Mb)| 0-0x3fffff (4 Mb)}, int lut {0-7}, bool collision)
+0220                  	if (status!=-1)
+    \ 000025 a303                 lda     3,s
+    \ 000027 c9ffff               cmp     ##-1
+    \ 00002a f04a                 beq     `?L16`
+0221                  	{
+0222                  		status=vickyBitmap (0,true,0,0,false);
+    \ 00002c f40000               pea     ##0
+    \ 00002f 64..                 stz     dp:.tiny (_Dp+2)
+    \ 000031 a20100               ldx     ##1
+    \ 000034 86..                 stx     dp:.tiny _Dp
+    \ 000036 a90000               lda     ##0
+    \ 000039 85..                 sta     dp:.tiny (_Dp+4)
+    \ 00003b 85..                 sta     dp:.tiny (_Dp+6)
+    \ 00003d 22......             jsl     long:vickyBitmap
+    \ 000041 aa                   tax
+    \ 000042 68                   pla
+    \ 000043 8a                   txa
+    \ 000044 8303                 sta     3,s
+0223                  		if (status==0)
+    \ 000046 a303                 lda     3,s
+    \ 000048 d01d                 bne     `?L19`
+0224                  		{
+0225                  			ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+    \ 00004a 22......             jsl     long:ANSIClrScr
+0226                  			ANSILocate(1,1);		// Locate cursor at 1,1
+    \ 00004e a20100               ldx     ##1
+    \ 000051 86..                 stx     dp:.tiny _Dp
+    \ 000053 8a                   txa
+    \ 000054 22......             jsl     long:ANSILocate
+0227                  			// Set Border size to 0 
+0228                  			BORDER_CTRL_REG = 0;
+    \ 000058 e220                 sep     #32
+    \ 00005a a900                 lda     #0
+    \ 00005c 8f0400af             sta     long:11468804
+    \ 000060 c220                 rep     #32
+0229                  			return 0;
+    \ 000062 a90000               lda     ##0
+    \ 000065 801c                 bra     `?L15`
+    \ 000067          `?L19`:
+0230                  		}
+0231                  		else 
+0232                  		{
+0233                  			printf ("Error %d while setting bitmap",status);
+    \ 000067 48                   pha
+    \ 000068 a9....               lda     ##`_StringLiteral_Error %d while setting bitmap`
+    \ 00006b 22......             jsl     long:printf
+    \ 00006f 8303                 sta     3,s
+0234                  			return status;
+    \ 000071 68                   pla
+    \ 000072 a303                 lda     3,s
+    \ 000074 800d                 bra     `?L15`
+    \ 000076          `?L16`:
+0235                  		} //Error setting Bitmap
+0236                  	}
+0237                  	else 
+0238                  	{
+0239                  		printf ("Error %d while setting VideoMode",status);
+    \ 000076 48                   pha
+    \ 000077 a9....               lda     ##`_StringLiteral_Error %d while setting VideoMode`
+    \ 00007a 22......             jsl     long:printf
+    \ 00007e 8303                 sta     3,s
+0240                  		return status;
+    \ 000080 68                   pla
+    \ 000081 a303                 lda     3,s
+    \ 000083          `?L15`:
+0241                  	} //Error setting videomode
+0242                  }
+    \ 000083 7a                   ply
+    \ 000084 7a                   ply
+    \ 000085 6b                   rtl
+0243
+0244                  // ----------------------------------------
+0245                  // Shake Screen
+0246                  // Uses Smooth scrolling registers to Shake screen!
+0247                  // Ernesto Contreras
+0248                  // ----------------------------------------
+0249
+0250                  void shake(int repetitions)
+0251                  {
+    \ 000000                      .section farcode,text
+    \ 000000                      .public shake
+    \ 000000 5a       shake:      phy
+    \ 000001 5a                   phy
+    \ 000002 5a                   phy
+    \ 000003 8301                 sta     1,s
+0252                  	// bits 4-6 of BORDER CONTROL REGISTER CONTROL SMOOTH SCROLLING
+0253                  	int c, loop;
+0254                  	for (loop=0;loop<repetitions;loop++)
+    \ 000005 a90000               lda     ##0
+    \ 000008 8305     `?L71`:     sta     5,s
+    \ 00000a a305                 lda     5,s
+    \ 00000c 38                   sec
+    \ 00000d e301                 sbc     1,s
+    \ 00000f 5003                 bvc     `?L61`
+    \ 000011 490080               eor     ##-32768
+    \ 000014 3004     `?L61`:     bmi     `?L28`
+0255                  	{
+0256                  		for (c=0;c<8;c++)
+0257                  		{
+0258                  			BORDER_CTRL_REG = (BORDER_CTRL_REG & 1) + c*16;
+0259                  			delay(60);
+0260                  		}
+0261                  		for (c=7;c>=0;c--)
+0262                  		{
+0263                  			BORDER_CTRL_REG = (BORDER_CTRL_REG & 1) + c*16;
+0264                  			delay(60);
+0265                  		}
+0266                  	}
+0267                  }
+    \ 000016 7a                   ply
+    \ 000017 7a                   ply
+    \ 000018 7a                   ply
+    \ 000019 6b                   rtl
+    \ 00001a a90000   `?L28`:     lda     ##0
+    \ 00001d 8303                 sta     3,s
+    \ 00001f a303     `?L33`:     lda     3,s
+    \ 000021 38                   sec
+    \ 000022 e90800               sbc     ##8
+    \ 000025 5003                 bvc     `?L63`
+    \ 000027 490080               eor     ##-32768
+    \ 00002a 3027     `?L63`:     bmi     `?L32`
+    \ 00002c a90700               lda     ##7
+    \ 00002f 8303                 sta     3,s
+    \ 000031 a303     `?L37`:     lda     3,s
+    \ 000033 1009                 bpl     `?L36`
+    \ 000035 a305                 lda     5,s
+    \ 000037 1a                   inc     a
+    \ 000038 8303                 sta     3,s
+    \ 00003a a303                 lda     3,s
+    \ 00003c 80ca                 bra     `?L71`
+    \ 00003e          `?L36`:
+    \ 00003e 22......             jsl     long:`?L73`
+    \ 000042 a303                 lda     3,s
+    \ 000044 22......             jsl     long:`?L72`
+    \ 000048 3b                   tsc
+    \ 000049 18                   clc
+    \ 00004a 690300               adc     ##3
+    \ 00004d aa                   tax
+    \ 00004e de0000               dec     0,x
+    \ 000051 80de                 bra     `?L37`
+    \ 000053          `?L32`:
+    \ 000053 22......             jsl     long:`?L73`
+    \ 000057 a303                 lda     3,s
+    \ 000059 22......             jsl     long:`?L72`
+    \ 00005d a303                 lda     3,s
+    \ 00005f 1a                   inc     a
+    \ 000060 8303                 sta     3,s
+    \ 000062 80bb                 bra     `?L33`
+0268
+0269                  // ----------------------------------------
+0270                  // Delay Function
+0271                  // credits https://www.quora.com/How-do-you-use-the-time-delay-in-C-programming
+0272                  // ----------------------------------------
+0273
+0274                  void delay(int delay) 
+0275                  { 
+    \ 000000                      .section farcode,text
+    \ 000000                      .public delay
+    \ 000000 a8       delay:      tay
+    \ 000001 3b                   tsc
+    \ 000002 38                   sec
+    \ 000003 e90a00               sbc     ##10
+    \ 000006 1b                   tcs
+    \ 000007 98                   tya
+    \ 000008 8301                 sta     1,s
+0276                   int now=time(NULL); 
+    \ 00000a a20000               ldx     ##0
+    \ 00000d 86..                 stx     dp:.tiny _Dp
+    \ 00000f 3b                   tsc
+    \ 000010 18                   clc
+    \ 000011 690300               adc     ##3
+    \ 000014 22......             jsl     long:time
+    \ 000018 a303                 lda     3,s
+    \ 00001a aa                   tax
+0277                   int later=now+delay; 
+    \ 00001b 8a                   txa
+    \ 00001c 18                   clc
+    \ 00001d 6301                 adc     1,s
+    \ 00001f 8301                 sta     1,s
+    \ 000021          `?L43`:
+0278                  	while(now<=later)
+    \ 000021 a301                 lda     1,s
+    \ 000023 86..                 stx     dp:.tiny _Dp
+    \ 000025 38                   sec
+    \ 000026 e5..                 sbc     dp:.tiny _Dp
+    \ 000028 5003                 bvc     `?L68`
+    \ 00002a 490080               eor     ##-32768
+    \ 00002d 3013     `?L68`:     bmi     `?L42`
+0279                  	    now=time(NULL); 
+    \ 00002f a20000               ldx     ##0
+    \ 000032 86..                 stx     dp:.tiny _Dp
+    \ 000034 3b                   tsc
+    \ 000035 18                   clc
+    \ 000036 690300               adc     ##3
+    \ 000039 22......             jsl     long:time
+    \ 00003d a303                 lda     3,s
+    \ 00003f aa                   tax
+    \ 000040 80df                 bra     `?L43`
+    \ 000042          `?L42`:
+0280                  } 
+    \ 000042 3b                   tsc
+    \ 000043 18                   clc
+    \ 000044 690a00               adc     ##10
+    \ 000047 1b                   tcs
+    \ 000048 6b                   rtl
+    \ 000000                      .section farcode,text
+    \ 000000 e220     `?L72`:     sep     #32
+    \ 000002 0a                   asl     a
+    \ 000003 0a                   asl     a
+    \ 000004 0a                   asl     a
+    \ 000005 0a                   asl     a
+    \ 000006 c220                 rep     #32
+    \ 000008 18                   clc
+    \ 000009 65..                 adc     dp:.tiny _Dp
+    \ 00000b e220                 sep     #32
+    \ 00000d 8f0400af             sta     long:11468804
+    \ 000011 c220                 rep     #32
+    \ 000013 a93c00               lda     ##60
+    \ 000016 5c......             jmp     long:delay
+    \ 000000                      .section farcode,text
+    \ 000000 e220     `?L73`:     sep     #32
+    \ 000002 af0400af             lda     long:11468804
+    \ 000006 c220                 rep     #32
+    \ 000008 290100               and     ##1
+    \ 00000b 85..                 sta     dp:.tiny _Dp
+    \ 00000d 6b                   rtl
+    \ 000000                      .section cdata,rodata
+    \ 000000                      .pubweak `_StringLiteral_Error %d while setting VideoMode`
+    \ 000000          `_StringLiteral_Error %d while setting VideoMode`:
+    \ 000000 4572726f             .byte   69,114,114,111,114,32,37,100,32,119,104,105,108,101,32,115,101,116,116,105,110,103,32,86,105,100,101,111,77,111,100,101,0
+    \ 000004 72202564
+    \ 000008 20776869
+    \ 00000c 6c652073
+    \ 000010 65747469
+    \ 000014 6e672056
+    \ 000018 6964656f
+    \ 00001c 4d6f6465
+    \ 000020 00
+    \ 000000                      .section cdata,rodata
+    \ 000000                      .pubweak `_StringLiteral_Error %d while setting bitmap`
+    \ 000000          `_StringLiteral_Error %d while setting bitmap`:
+    \ 000000 4572726f             .byte   69,114,114,111,114,32,37,100,32,119,104,105,108,101,32,115,101,116,116,105,110,103,32,98,105,116,109,97,112,0
+    \ 000004 72202564
+    \ 000008 20776869
+    \ 00000c 6c652073
+    \ 000010 65747469
+    \ 000014 6e672062
+    \ 000018 69746d61
+    \ 00001c 7000
+    \ 000000                      .section cdata,rodata
+    \ 000000                      .pubweak `_StringLiteral_[84,104,120,32,102,111,114,32,119,97,116,99,104,105,110,103,32,116,104,105,115,32,100,101,109,111,10,13]`
+    \ 000000          `_StringLiteral_[84,104,120,32,102,111,114,32,119,97,116,99,104,105,110,103,32,116,104,105,115,32,100,101,109,111,10,13]`:
+    \ 000000 54687820             .byte   84,104,120,32,102,111,114,32,119,97,116,99,104,105,110,103,32,116,104,105,115,32,100,101,109,111,10,13,0
+    \ 000004 666f7220
+    \ 000008 77617463
+    \ 00000c 68696e67
+    \ 000010 20746869
+    \ 000014 73206465
+    \ 000018 6d6f0a0d
+    \ 00001c 00
+    \ 000000                      .section cdata,rodata
+    \ 000000                      .pubweak `_StringLiteral_[84,105,109,101,32,37,100,13]`
+    \ 000000          `_StringLiteral_[84,105,109,101,32,37,100,13]`:
+    \ 000000 54696d65             .byte   84,105,109,101,32,37,100,13,0
+    \ 000004 2025640d
+    \ 000008 00
+
+##########################
+#                        #
+# Memory sizes (decimal) #
+#                        #
+##########################
+
+Executable  (Text): 429 bytes
+Constant          : 101 bytes

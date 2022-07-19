@@ -1,0 +1,30 @@
+###############################################################################
+#                                                                             #
+# Calypsi assembler for 65816                                   version 3.6.2 #
+#                                                       06/Jul/2022  22:39:44 #
+# Command line: --debug --core=65816 --target=Foenix --code-model=large       #
+#               --data-model=medium --list-file=obj/stub_putchar-lc-md.lst    #
+#               -o obj/stub_putchar-lc-md.o src/stub_putchar.s                #
+#                                                                             #
+###############################################################################
+
+0001                  #include "macros.h"
+0002
+0003
+0004                  PUTC:         .equlab 0x1018
+0005
+0006                                .section libcode
+0007                                .public _Stub_putchar
+0008                  _Stub_putchar:
+0009  000000 29ff00                 and     ##0x00ff      ; zero extend char, we always succeed
+0010  000003 22181000               jsl     PUTC
+0011                                return
+    \ 000007 6b                   rtl
+
+##########################
+#                        #
+# Memory sizes (decimal) #
+#                        #
+##########################
+
+Executable  (Text): 8 bytes

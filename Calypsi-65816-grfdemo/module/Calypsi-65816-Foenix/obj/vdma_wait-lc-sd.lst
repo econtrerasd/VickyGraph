@@ -1,0 +1,48 @@
+###############################################################################
+#                                                                             #
+# Calypsi ISO C compiler for 65816                              version 3.6.2 #
+#                                                       06/Jul/2022  22:39:44 #
+# Command line: --core=65816 --target=Foenix --code-model=large               #
+#               --data-model=small --debug -Iinclude                          #
+#               --list-file=obj/vdma_wait-lc-sd.lst -o                        #
+#               obj/vdma_wait-lc-sd.o src/vdma_wait.c                         #
+#                                                                             #
+###############################################################################
+
+    \ 000000                      .rtmodel version,"1"
+    \ 000000                      .rtmodel codeModel,"large"
+    \ 000000                      .rtmodel dataModel,"small"
+    \ 000000                      .rtmodel core,"65816"
+    \ 000000                      .rtmodel huge,"0"
+    \ 000000                      .rtmodel target,"foenix"
+    \ 000000                      .extern _Dp
+    \ 000000                      .extern _Vfp
+0001                  #include "foenix/dma.h"
+0002                  #include "support.h"
+0003
+0004                  void wait_for_DMA_to_finish () {
+    \ 000000                      .section farcode,text
+    \ 000000                      .public wait_for_DMA_to_finish
+    \ 000000          wait_for_DMA_to_finish:
+    \ 000000          `?L8`:
+0005                    while ((VDMA_STATUS_REG & VDMA_STAT_VDMA_IPS))
+    \ 000000 e220                 sep     #32
+    \ 000002 af0104af             lda     long:11469825
+    \ 000006 c220                 rep     #32
+    \ 000008 30f6                 bmi     `?L8`
+0006                      ;
+0007                    VDMA_CONTROL_REG = 0;
+    \ 00000a e220                 sep     #32
+    \ 00000c a900                 lda     #0
+    \ 00000e 8f0004af             sta     long:11469824
+    \ 000012 c220                 rep     #32
+0008                  }
+    \ 000014 6b                   rtl
+
+##########################
+#                        #
+# Memory sizes (decimal) #
+#                        #
+##########################
+
+Executable  (Text): 21 bytes
