@@ -1,0 +1,175 @@
+###############################################################################
+#                                                                             #
+# Calypsi assembler for 65816                                   version 3.6.2 #
+#                                                       06/Jul/2022  22:39:43 #
+# Command line: --debug --core=65816 --target=Foenix --code-model=large       #
+#               --data-model=small --list-file=obj/Foenix-startup-lc-sd.lst   #
+#               -o obj/Foenix-startup-lc-sd.o src/Foenix-startup.s            #
+#                                                                             #
+###############################################################################
+
+0001                  ;;; Startup variant, change attribute value if you make your own
+0002                                .rtmodel cstartup,"Foenix"
+0003
+0004                                .rtmodel version, "1"
+0005                                .rtmodel cpu, "*"
+0006
+0007                                .section stack
+0008                                .section cstack
+0009                                .section heap
+0010                                .section data_init_table
+0011
+0012                                .extern main, exit
+0013                                .extern _Dp, _Vfp
+0014                                .extern _DirectPageStart
+0015
+0016                  #ifndef __CALYPSI_DATA_MODEL_SMALL__
+0017                                .extern _NearBaseAddress
+0018                  #endif
+0019
+0020                  #include "macros.h"
+0021
+0022                  ;;; ***************************************************************************
+0023                  ;;;
+0024                  ;;; __program_root_section - this is what the linker pulls in first
+0025                  ;;; __program_start - actual start point of the program
+0026                  ;;;
+0027                  ;;; Set up CPU stack, initialize sections and call main().
+0028                  ;;; You can override this with your own routine, or tailor it as needed.
+0029                  ;;; The easiest way to make custom initialization is to provide your own
+0030                  ;;; __low_level_init which gets called after stacks have been initialized.
+0031                  ;;;
+0032                  ;;; ***************************************************************************
+0033
+0034                                .section code, noreorder
+0035                                .pubweak __program_root_section, __program_start
+0036                  __program_root_section:
+0037                  __program_start:
+0038  000000 18                     clc
+0039  000001 fb                     xce                   ; native 16-bit mode
+0040  000002 c238                   rep     #0x38         ; 16-bit registers, no decimal mode
+0041  000004 a9....                 lda     ##_DirectPageStart
+0042  000007 5b                     tcd                   ; set direct page
+0043                  #ifdef __CALYPSI_DATA_MODEL_SMALL__
+0044  000008 a90000                 lda     ##0
+0045                  #else
+0046                                lda     ##.word2 _NearBaseAddress
+0047                  #endif
+0048  00000b 64..                   stz     dp:.tiny(_Vfp+2)
+0049  00000d eb                     xba                   ; A upper half = data bank
+0050  00000e 48                     pha
+0051  00000f ab                     plb                   ; pop 8 dummy
+0052  000010 ab                     plb                   ; set data bank
+0053
+0054                                call    __low_level_init
+    \ 000011 22......             jsl     long:__low_level_init
+0055
+0056                  ;;; **** Initialize data sections if needed.
+0057                                .section code, noroot, noreorder
+0058                                .pubweak __data_initialization_needed
+0059                                .extern __initialize_sections
+0060                  __data_initialization_needed:
+0061                  #ifdef __CALYPSI_DATA_MODEL_SMALL__
+0062  000000 a9....                 lda     ##.sectionEnd data_init_table
+0063  000003 85..                   sta     dp:.tiny(_Dp+0)
+0064  000005 a9....                 lda     ##.sectionStart data_init_table
+0065                  #else
+0066                                lda     ##.word2 (.sectionEnd data_init_table)
+0067                                sta     dp:.tiny(_Dp+6)
+0068                                lda     ##.word0 (.sectionEnd data_init_table)
+0069                                sta     dp:.tiny(_Dp+4)
+0070                                lda     ##.word2 (.sectionStart data_init_table)
+0071                                sta     dp:.tiny(_Dp+2)
+0072                                lda     ##.word0 (.sectionStart data_init_table)
+0073                                sta     dp:.tiny(_Dp+0)
+0074                  #endif
+0075                                call    __initialize_sections
+    \ 000008 22......             jsl     long:__initialize_sections
+0076
+0077  00000c ba                     tsx
+0078                  #ifdef __CALYPSI_DATA_MODEL_SMALL__
+0079  00000d 8e....                 stx     abs:_InitialStack ; for exit()
+0080                  #else
+0081                                stx     abs:.near _InitialStack ; for exit()
+0082                  #endif
+0083
+0084                  ;;; **** Initialize streams if needed.
+0085                                .section code, noroot, noreorder
+0086                                .pubweak __call_initialize_global_streams
+0087                                .extern __initialize_global_streams
+0088                  __call_initialize_global_streams:
+0089                                call    __initialize_global_streams
+    \ 000000 22......             jsl     long:__initialize_global_streams
+0090
+0091                  ;;; **** Initialize heap if needed.
+0092                                .section code, noroot, noreorder
+0093                                .pubweak __call_heap_initialize
+0094                                .extern __heap_initialize, __default_heap
+0095                  __call_heap_initialize:
+0096                  #ifdef __CALYPSI_DATA_MODEL_SMALL__
+0097  000000 a9....                 lda     ##.sectionSize heap
+0098  000003 85..                   sta     dp:.tiny(_Dp+2)
+0099  000005 a9....                 lda     ##.sectionStart heap
+0100  000008 85..                   sta     dp:.tiny(_Dp+0)
+0101  00000a a9....                 lda     ##__default_heap
+0102                  #else
+0103                                lda     ##.word2 (.sectionStart heap)
+0104                                sta     dp:.tiny(_Dp+6)
+0105                                lda     ##.word0 (.sectionStart heap)
+0106                                sta     dp:.tiny(_Dp+4)
+0107                                lda     ##.word2 __default_heap
+0108                                sta     dp:.tiny(_Dp+2)
+0109                                lda     ##.word0 __default_heap
+0110                                sta     dp:.tiny(_Dp+0)
+0111                                ldx     ##.word2 (.sectionSize heap)
+0112                                lda     ##.word0 (.sectionSize heap)
+0113                  #endif
+0114                                call    __heap_initialize
+    \ 00000d 22......             jsl     long:__heap_initialize
+0115
+0116                                .section code, root, noreorder
+0117  000000 a90000                 lda     ##0           ; argc = 0
+0118                                call    main
+    \ 000003 22......             jsl     long:main
+0119                                jump    exit
+    \ 000007 5c......             jmp     long:exit
+0120
+0121                  ;;; ***************************************************************************
+0122                  ;;;
+0123                  ;;; __low_level_init - custom low level initialization
+0124                  ;;;
+0125                  ;;; This default routine just returns doing nothing. You can provide your own
+0126                  ;;; routine, either in C or assembly for doing custom low leve initialization.
+0127                  ;;;
+0128                  ;;; ***************************************************************************
+0129
+0130                                .section libcode
+0131                                .pubweak __low_level_init
+0132                  __low_level_init:
+0133                                return
+    \ 000000 6b                   rtl
+0134
+0135                  ;;; ***************************************************************************
+0136                  ;;;
+0137                  ;;; Keep track of the initial stack pointer so that it can be restores to make
+0138                  ;;; a return back on exit().
+0139                  ;;;
+0140                  ;;; ***************************************************************************
+0141
+0142                  #ifdef __CALYPSI_DATA_MODEL_SMALL__
+0143                                .section zdata, bss
+0144                  #else
+0145                                .section znear, bss
+0146                  #endif
+0147                                .public _InitialStack
+0148                  _InitialStack:
+0149  000000                        .space  2
+
+##########################
+#                        #
+# Memory sizes (decimal) #
+#                        #
+##########################
+
+Executable        (Text): 70 bytes
+Zero initialized   (BSS):  2 bytes

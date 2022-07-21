@@ -1,0 +1,217 @@
+###############################################################################
+#                                                                             #
+# Calypsi ISO C compiler for 65816                              version 3.6.2 #
+#                                                       06/Jul/2022  22:39:45 #
+# Command line: --core=65816 --target=Foenix --code-model=large               #
+#               --data-model=medium --debug -Iinclude                         #
+#               --list-file=obj/vram_copy-lc-md.lst -o                        #
+#               obj/vram_copy-lc-md.o src/vram_copy.c                         #
+#                                                                             #
+###############################################################################
+
+    \ 000000                      .rtmodel version,"1"
+    \ 000000                      .rtmodel codeModel,"large"
+    \ 000000                      .rtmodel dataModel,"medium"
+    \ 000000                      .rtmodel core,"65816"
+    \ 000000                      .rtmodel huge,"0"
+    \ 000000                      .rtmodel doubleSize,"32"
+    \ 000000                      .rtmodel target,"foenix"
+    \ 000000                      .extern DMA_wait_delay
+    \ 000000                      .extern _Dp
+    \ 000000                      .extern _Vfp
+    \ 000000                      .extern wait_for_DMA_to_finish
+0001                  // Provide alternative memcpy() that makes use of VDMA if appropriate.
+0002
+0003                  #include <stdlib.h>
+0004                  #include <string.h>
+0005                  #include "foenix/dma.h"
+0006                  #include "support.h"
+0007
+0008                  #if defined(__CALYPSI_TARGET_65816__) && defined(__CALYPSI_DATA_MODEL_SMALL__)
+0009                  void *__memcpy__far (__far void *dest, __far const void *src, size_t n) {
+0010                  #else
+0011                  void *memcpy (void *dest, const void *src, size_t n) {
+    \ 000000                      .section farcode,text
+    \ 000000                      .public memcpy
+    \ 000000          memcpy:
+    \ 000000 d4..                 pei     dp:.tiny (_Dp+8)
+    \ 000002 d4..                 pei     dp:.tiny (_Dp+10)
+    \ 000004 a8                   tay
+    \ 000005 3b                   tsc
+    \ 000006 38                   sec
+    \ 000007 e91200               sbc     ##18
+    \ 00000a 1b                   tcs
+    \ 00000b 98                   tya
+    \ 00000c aa                   tax
+    \ 00000d a5..                 lda     dp:.tiny _Dp
+    \ 00000f 85..                 sta     dp:.tiny (_Dp+8)
+    \ 000011 a5..                 lda     dp:.tiny (_Dp+2)
+    \ 000013 85..                 sta     dp:.tiny (_Dp+10)
+    \ 000015 a5..                 lda     dp:.tiny (_Dp+4)
+    \ 000017 8305                 sta     5,s
+    \ 000019 a5..                 lda     dp:.tiny (_Dp+6)
+    \ 00001b 8307                 sta     7,s
+0012                  #endif
+0013                    if (in_vram(dest)) {
+    \ 00001d a5..                 lda     dp:.tiny (_Dp+9)
+    \ 00001f c900b0               cmp     ##45056
+    \ 000022 9070                 bcc     `?L8`
+0014
+0015                      SDMA_SRC_ADDY = src;
+    \ 000024 a305                 lda     5,s
+    \ 000026 8f2204af             sta     long:11469858
+    \ 00002a e220                 sep     #32
+    \ 00002c a307                 lda     7,s
+    \ 00002e 8f2404af             sta     long:11469860
+    \ 000032 c220                 rep     #32
+0016                      VDMA_DST_ADDY = dest;
+    \ 000034 a5..                 lda     dp:.tiny (_Dp+8)
+    \ 000036 85..                 sta     dp:.tiny _Dp
+    \ 000038 a5..                 lda     dp:.tiny (_Dp+10)
+    \ 00003a 85..                 sta     dp:.tiny (_Dp+2)
+    \ 00003c a5..                 lda     dp:.tiny _Dp
+    \ 00003e 8f0504af             sta     long:11469829
+    \ 000042 e220                 sep     #32
+    \ 000044 a5..                 lda     dp:.tiny (_Dp+2)
+    \ 000046 8f0704af             sta     long:11469831
+    \ 00004a c220                 rep     #32
+0017
+0018                      SDMA_SIZE = n;
+    \ 00004c 8a                   txa
+    \ 00004d 8f2804af             sta     long:11469864
+    \ 000051 a90000               lda     ##0
+    \ 000054 8f2a04af             sta     long:11469866
+0019                      VDMA_SIZE = n;
+    \ 000058 8a                   txa
+    \ 000059 8f0804af             sta     long:11469832
+    \ 00005d a90000               lda     ##0
+    \ 000060 8f0a04af             sta     long:11469834
+0020
+0021                      // Start VDMA
+0022                      VDMA_CONTROL_REG |= VDMA_CTRL_Start_TRF;
+    \ 000064 e220                 sep     #32
+    \ 000066 a980                 lda     #-128
+    \ 000068 0f0004af             ora     long:11469824
+    \ 00006c 8f0004af             sta     long:11469824
+    \ 000070 c220                 rep     #32
+0023                      // Start system DMA
+0024                      SDMA_CTRL_REG0 |= SDMA_CTRL0_Start_TRF;
+    \ 000072 e220                 sep     #32
+    \ 000074 a980                 lda     #-128
+    \ 000076 0f2004af             ora     long:11469856
+    \ 00007a 8f2004af             sta     long:11469856
+    \ 00007e c220                 rep     #32
+0025
+0026                      // When started, the 65816 is held, but it takes a few cycles.
+0027                      // Provide a short delay to ensure that we do not execute too far
+0028                      // before the transfer actually starts. Call a delay subroutine for
+0029                      // this.
+0030                      DMA_wait_delay();
+    \ 000080 22......             jsl     long:DMA_wait_delay
+0031
+0032                      SDMA_CTRL_REG0 = 0;
+    \ 000084 e220                 sep     #32
+    \ 000086 a900                 lda     #0
+    \ 000088 8f2004af             sta     long:11469856
+    \ 00008c c220                 rep     #32
+0033                      wait_for_DMA_to_finish();
+    \ 00008e 22......             jsl     long:wait_for_DMA_to_finish
+    \ 000092 807c                 bra     `?L9`
+    \ 000094          `?L8`:
+0034
+0035                    } else {
+0036
+0037                      unsigned char *pout = (unsigned char *)dest;
+    \ 000094 a5..                 lda     dp:.tiny (_Dp+8)
+    \ 000096 8301                 sta     1,s
+    \ 000098 a5..                 lda     dp:.tiny (_Dp+10)
+    \ 00009a 8303                 sta     3,s
+0038                      unsigned char *pin  = (unsigned char *)src;
+    \ 00009c a305                 lda     5,s
+    \ 00009e 8305                 sta     5,s
+    \ 0000a0 a307                 lda     7,s
+    \ 0000a2 8307                 sta     7,s
+0039                      while (n-- > 0) *pout++ = *pin++;
+    \ 0000a4 a301                 lda     1,s
+    \ 0000a6 830e                 sta     14,s
+    \ 0000a8 a303                 lda     3,s
+    \ 0000aa 8310                 sta     16,s
+    \ 0000ac a307                 lda     7,s
+    \ 0000ae 85..                 sta     dp:.tiny (_Dp+2)
+    \ 0000b0 a305                 lda     5,s
+    \ 0000b2 85..                 sta     dp:.tiny _Dp
+    \ 0000b4 9b       `?L11`:     txy
+    \ 0000b5 8a                   txa
+    \ 0000b6 3a                   dec     a
+    \ 0000b7 aa                   tax
+    \ 0000b8 64..                 stz     dp:.tiny (_Dp+4)
+    \ 0000ba a5..                 lda     dp:.tiny (_Dp+4)
+    \ 0000bc 84..                 sty     dp:.tiny (_Dp+4)
+    \ 0000be c5..                 cmp     dp:.tiny (_Dp+4)
+    \ 0000c0 b04e                 bcs     `?L12`
+    \ 0000c2 a30e                 lda     14,s
+    \ 0000c4 8301                 sta     1,s
+    \ 0000c6 a310                 lda     16,s
+    \ 0000c8 8303                 sta     3,s
+    \ 0000ca a310                 lda     16,s
+    \ 0000cc 85..                 sta     dp:.tiny (_Dp+6)
+    \ 0000ce a30e                 lda     14,s
+    \ 0000d0 85..                 sta     dp:.tiny (_Dp+4)
+    \ 0000d2 e6..                 inc     dp:.tiny (_Dp+4)
+    \ 0000d4 a5..                 lda     dp:.tiny (_Dp+4)
+    \ 0000d6 8305                 sta     5,s
+    \ 0000d8 a5..                 lda     dp:.tiny (_Dp+6)
+    \ 0000da 8307                 sta     7,s
+    \ 0000dc e220                 sep     #32
+    \ 0000de a7..                 lda     [.tiny _Dp]
+    \ 0000e0 8309                 sta     9,s
+    \ 0000e2 c220                 rep     #32
+    \ 0000e4 e6..                 inc     dp:.tiny _Dp
+    \ 0000e6 a5..                 lda     dp:.tiny _Dp
+    \ 0000e8 830a                 sta     10,s
+    \ 0000ea a5..                 lda     dp:.tiny (_Dp+2)
+    \ 0000ec 830c                 sta     12,s
+    \ 0000ee a303                 lda     3,s
+    \ 0000f0 85..                 sta     dp:.tiny (_Dp+2)
+    \ 0000f2 a301                 lda     1,s
+    \ 0000f4 85..                 sta     dp:.tiny _Dp
+    \ 0000f6 e220                 sep     #32
+    \ 0000f8 a309                 lda     9,s
+    \ 0000fa 87..                 sta     [.tiny _Dp]
+    \ 0000fc c220                 rep     #32
+    \ 0000fe a305                 lda     5,s
+    \ 000100 830e                 sta     14,s
+    \ 000102 a307                 lda     7,s
+    \ 000104 8310                 sta     16,s
+    \ 000106 a30c                 lda     12,s
+    \ 000108 85..                 sta     dp:.tiny (_Dp+2)
+    \ 00010a a30a                 lda     10,s
+    \ 00010c 85..                 sta     dp:.tiny _Dp
+    \ 00010e 80a4                 bra     `?L11`
+    \ 000110          `?L12`:
+    \ 000110          `?L9`:
+0040
+0041                    }
+0042                    return dest;
+    \ 000110 a6..                 ldx     dp:.tiny (_Dp+10)
+    \ 000112 a5..                 lda     dp:.tiny (_Dp+8)
+0043                  }
+    \ 000114 a8                   tay
+    \ 000115 3b                   tsc
+    \ 000116 18                   clc
+    \ 000117 691200               adc     ##18
+    \ 00011a 1b                   tcs
+    \ 00011b 98                   tya
+    \ 00011c 7a                   ply
+    \ 00011d 84..                 sty     dp:.tiny (_Dp+10)
+    \ 00011f 7a                   ply
+    \ 000120 84..                 sty     dp:.tiny (_Dp+8)
+    \ 000122 6b                   rtl
+
+##########################
+#                        #
+# Memory sizes (decimal) #
+#                        #
+##########################
+
+Executable  (Text): 291 bytes

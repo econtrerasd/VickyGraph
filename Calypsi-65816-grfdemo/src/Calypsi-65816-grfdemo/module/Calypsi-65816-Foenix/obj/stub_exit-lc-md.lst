@@ -1,0 +1,29 @@
+###############################################################################
+#                                                                             #
+# Calypsi assembler for 65816                                   version 3.6.2 #
+#                                                       06/Jul/2022  22:39:44 #
+# Command line: --debug --core=65816 --target=Foenix --code-model=large       #
+#               --data-model=medium --list-file=obj/stub_exit-lc-md.lst -o    #
+#               obj/stub_exit-lc-md.o src/stub_exit.s                         #
+#                                                                             #
+###############################################################################
+
+0001                                .section code
+0002                                .public _Stub_exit
+0003                                .extern _InitialStack
+0004                  _Stub_exit:
+0005                  #ifdef __CALYPSI_DATA_MODEL_SMALL__
+0006                                ldx     abs:_InitialStack
+0007                  #else
+0008  000000 ae....                 ldx     abs:.near _InitialStack
+0009                  #endif
+0010  000003 9a                     txs
+0011  000004 6b                     rtl
+
+##########################
+#                        #
+# Memory sizes (decimal) #
+#                        #
+##########################
+
+Executable  (Text): 5 bytes

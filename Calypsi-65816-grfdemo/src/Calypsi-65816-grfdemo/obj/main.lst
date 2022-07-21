@@ -1,0 +1,1581 @@
+###############################################################################
+#                                                                             #
+# Calypsi ISO C compiler for 65816                              version 3.6.2 #
+#                                                       20/Jul/2022  19:44:28 #
+# Command line: --core=65816 --code-model=large --data-model=small            #
+#               --target=Foenix -I ./include --speed -O2 --debug              #
+#               --list-file=obj/main.lst -o obj/main.o src/main.c             #
+#                                                                             #
+###############################################################################
+
+    \ 000000                      .rtmodel version,"1"
+    \ 000000                      .rtmodel codeModel,"large"
+    \ 000000                      .rtmodel dataModel,"small"
+    \ 000000                      .rtmodel core,"65816"
+    \ 000000                      .rtmodel huge,"0"
+    \ 000000                      .rtmodel doubleSize,"32"
+    \ 000000                      .rtmodel target,"foenix"
+    \ 000000                      .extern ANSIClrScr
+    \ 000000                      .extern ANSILocate
+    \ 000000                      .extern _Dp
+    \ 000000                      .extern _SInt32ToFloat32
+    \ 000000                      .extern _Vfp
+    \ 000000                      .extern clrBitmap
+    \ 000000                      .extern floodFill
+    \ 000000                      .extern plot
+    \ 000000                      .extern plot_bezier
+    \ 000000                      .extern plot_circle
+    \ 000000                      .extern plot_ellipse
+    \ 000000                      .extern plot_line
+    \ 000000                      .extern plot_rectangle
+    \ 000000                      .extern plot_solid_circle
+    \ 000000                      .extern plot_solid_ellipse
+    \ 000000                      .extern plot_solid_rectangle
+    \ 000000                      .extern printf
+    \ 000000                      .extern rand
+    \ 000000                      .extern srand
+    \ 000000                      .extern time
+    \ 000000                      .extern vickyBitmap
+    \ 000000                      .extern vickyDefPalette
+    \ 000000                      .extern vickyPaletteCol
+    \ 000000                      .extern vickyResX
+    \ 000000                      .extern vickyResY
+    \ 000000                      .extern vickyVideomode
+0001                  // ----------------------------------------------------
+0002                  // Source Code for Resolution Independent Graphics Primitives & Vicky II Wrapper Functions
+0003                  // Theoretically It Should Work on Foenix c256 U, Foenix C256 u+, FMX
+0004                  // By Ernesto Contreras
+0005                  // June 2022
+0006                  // ----------------------------------------------------
+0007
+0008                  #include <stdio.h>
+0009                  #include <stdlib.h>
+0010                  #include <string.h>
+0011                  #include <dma.h>
+0012                  #include <time.h>
+0013                  //#include <math.h>
+0014                  #include "support.h"
+0015                  #include "vickyGraph.h"
+0016
+0017                  // Demo Helper functions
+0018                  int setupScreen(int mode);
+0019                  void delay(int delay);
+0020                  void shake(int repetitions);
+0021
+0022                  // Global Variables that hold screen resolution / current bitmap page / maxVickyMemory 
+0023                  long extern vickyResX;
+0024                  long extern vickyResY;
+0025
+0026                  // ----------------------
+0027                  // Main demo 
+0028                  // ----------------------
+0029
+0030                  int main ()
+0031                  {
+    \ 000000                      .section farcode,text
+    \ 000000                      .public main
+    \ 000000 3b       main:       tsc
+    \ 000001 38                   sec
+    \ 000002 e91a00               sbc     ##26
+    \ 000005 1b                   tcs
+0032                    int xRndInit;
+0033                    int xRndMid;
+0034                    int xRndMid2;
+0035                    int xRndEnd;
+0036                    int yRndInit;
+0037                    int yRndMid;
+0038                    int yRndMid2;
+0039                    int yRndEnd;
+0040                    int colRnd;
+0041                    int c,d,e;
+0042                    char option;
+0043                    ANSIClrScr();
+    \ 000006 22......             jsl     long:ANSIClrScr
+0044
+0045                  	if (setupScreen(1)==0)
+    \ 00000a a90100               lda     ##1
+    \ 00000d 22......             jsl     long:setupScreen
+    \ 000011 1a                   inc     a
+    \ 000012 3a                   dec     a
+    \ 000013 f003                 beq     `?L291`
+    \ 000015 4c....               jmp     .kbank `?L8`
+    \ 000018          `?L291`:
+0046                  	{
+0047                  		ANSIClrScr();
+    \ 000018 22......             jsl     long:ANSIClrScr
+0048                  		clrBitmap();
+    \ 00001c 22......             jsl     long:clrBitmap
+0049                  		c=time(NULL);
+    \ 000020 a20000               ldx     ##0
+    \ 000023 86..                 stx     dp:.tiny _Dp
+    \ 000025 3b                   tsc
+    \ 000026 18                   clc
+    \ 000027 691300               adc     ##19
+    \ 00002a 22......             jsl     long:time
+    \ 00002e a313                 lda     19,s
+0050                  		srand(c); 
+    \ 000030 22......             jsl     long:srand
+0051                  		printf("Palette Test...\r");
+    \ 000034 a9....               lda     ##`_StringLiteral_[80,97,108,101,116,116,101,32,84,101,115,116,46,46,46,13]`
+    \ 000037 22......             jsl     long:printf
+0052                  		 for (e=1;e<=5;e++)
+    \ 00003b a90100               lda     ##1
+    \ 00003e 8307     `?L271`:    sta     7,s
+    \ 000040 a90500               lda     ##5
+    \ 000043 38                   sec
+    \ 000044 e307                 sbc     7,s
+    \ 000046 5003                 bvc     `?L93`
+    \ 000048 490080               eor     ##-32768
+    \ 00004b 3003     `?L93`:     bmi     `?L292`
+    \ 00004d 4c....               jmp     .kbank `?L11`
+    \ 000050          `?L292`:
+0053                  		 {
+0054                  			if (e!=5)
+0055                  			// randomize palette
+0056                  			{
+0057                  				for (c=0;c<=255;c++)
+0058                  				{
+0059                  					vickyPaletteCol (0, c, rand() % 255, rand() % 255, rand() % 255, 255);
+0060                  				}
+0061                  			}
+0062                  			else 
+0063                  				vickyDefPalette();		
+0064                  			// paint pixel color bar
+0065                  			for (c=0;c<=255;c++)
+0066                  			{
+0067                  				for (d=0;d<20;d++)
+0068                  					plot (c+50, d+(e*50), c);
+0069                  			} 
+0070                  		 }
+0071                  		  clrBitmap();
+    \ 000050 22......             jsl     long:`?L272`
+0072                  		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+0073                  		  ANSILocate(1,1);
+0074                  		printf("200 Lines...\n\r");
+    \ 000054 a9....               lda     ##`_StringLiteral_[50,48,48,32,76,105,110,101,115,46,46,46,10,13]`
+    \ 000057 22......             jsl     long:`?L276`
+    \ 00005b          `?L267`:
+0075                  		 for (c=0;c<=200;c++)
+    \ 00005b 830b                 sta     11,s
+    \ 00005d a9c800               lda     ##200
+    \ 000060 38                   sec
+    \ 000061 e30b                 sbc     11,s
+    \ 000063 5003                 bvc     `?L99`
+    \ 000065 490080               eor     ##-32768
+    \ 000068 3003     `?L99`:     bmi     `?L293`
+    \ 00006a 4c....               jmp     .kbank `?L30`
+    \ 00006d          `?L293`:
+0076                  		  {
+0077                  			xRndInit=rand() % (int)vickyResX;
+0078                  			xRndEnd=rand() % (int)vickyResX;
+0079                  			yRndInit=rand() % (int)vickyResY;
+0080                  			yRndEnd=rand() % (int)vickyResY;
+0081                  			colRnd=rand() % 255;
+0082                  			plot_line (xRndInit, yRndInit, xRndEnd, yRndEnd, colRnd);
+0083                  		  } 
+0084                  		  clrBitmap();
+    \ 00006d 22......             jsl     long:`?L272`
+0085                  		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+0086                  		  ANSILocate(1,1);
+0087                  		 printf("100 Bezier Lines...\n\r");
+    \ 000071 a9....               lda     ##`_StringLiteral_[49,48,48,32,66,101,122,105,101,114,32,76,105,110,101,115,46,46,46,10,13]`
+    \ 000074 22......             jsl     long:`?L276`
+    \ 000078          `?L266`:
+0088                  		 for (c=0;c<=100;c++)
+    \ 000078 8313                 sta     19,s
+    \ 00007a a96400               lda     ##100
+    \ 00007d 38                   sec
+    \ 00007e e313                 sbc     19,s
+    \ 000080 5003                 bvc     `?L105`
+    \ 000082 490080               eor     ##-32768
+    \ 000085 3003     `?L105`:    bmi     `?L294`
+    \ 000087 4c....               jmp     .kbank `?L34`
+    \ 00008a          `?L294`:
+0089                  		  {
+0090                  			xRndInit=rand() % (int)vickyResX;
+0091                  			xRndEnd=rand() % (int)vickyResX;
+0092                  			xRndMid=rand() % (int)vickyResX;
+0093                  			xRndMid2=rand() % (int)vickyResX;
+0094                  			yRndInit=rand() % (int)vickyResY;
+0095                  			yRndMid=rand() % (int)vickyResY;
+0096                  			yRndMid2=rand() % (int)vickyResY;
+0097                  			yRndEnd=rand() % (int)vickyResY;
+0098                  			colRnd=rand() % 255;
+0099                  			plot_bezier (xRndInit, yRndInit, xRndMid, yRndMid,  xRndMid2, yRndMid2, xRndEnd, yRndEnd, colRnd);
+0100                  		  } 
+0101                  		  clrBitmap();
+    \ 00008a 22......             jsl     long:`?L272`
+0102                  		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+0103                  		  ANSILocate(1,1);
+0104                  		  printf("50 Rectangles...\n\r");
+    \ 00008e a9....               lda     ##`_StringLiteral_[53,48,32,82,101,99,116,97,110,103,108,101,115,46,46,46,10,13]`
+    \ 000091 22......             jsl     long:`?L276`
+    \ 000095          `?L265`:
+0105                  		  for (c=0;c<=50;c++)
+    \ 000095 830b                 sta     11,s
+    \ 000097 a93200               lda     ##50
+    \ 00009a 38                   sec
+    \ 00009b e30b                 sbc     11,s
+    \ 00009d 5003                 bvc     `?L111`
+    \ 00009f 490080               eor     ##-32768
+    \ 0000a2 3003     `?L111`:    bmi     `?L295`
+    \ 0000a4 4c....               jmp     .kbank `?L38`
+    \ 0000a7          `?L295`:
+0106                  		  {
+0107                  			xRndInit=rand() % (int)vickyResX;
+0108                  			xRndEnd=rand() % (int)vickyResX;
+0109                  			xRndMid=rand() % (int)vickyResX;
+0110                  			yRndMid=rand() % (int)vickyResY;
+0111                  			yRndInit=(rand() % (int)vickyResY);
+0112                  			yRndEnd=(rand() % (int)vickyResY);
+0113                  			colRnd=rand() % 255;
+0114                  			plot_rectangle (xRndInit, yRndInit, xRndEnd, yRndEnd, colRnd);
+0115                  		  } 
+0116                  		  clrBitmap();
+    \ 0000a7 22......             jsl     long:`?L272`
+0117                  		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+0118                  		  ANSILocate(1,1);
+0119                  		  printf("50 Circles...\n\r");
+    \ 0000ab a9....               lda     ##`_StringLiteral_[53,48,32,67,105,114,99,108,101,115,46,46,46,10,13]`
+    \ 0000ae 22......             jsl     long:`?L276`
+    \ 0000b2          `?L264`:
+0120                  		 for (c=0;c<=50;c++)
+    \ 0000b2 8309                 sta     9,s
+    \ 0000b4 a93200               lda     ##50
+    \ 0000b7 38                   sec
+    \ 0000b8 e309                 sbc     9,s
+    \ 0000ba 5003                 bvc     `?L117`
+    \ 0000bc 490080               eor     ##-32768
+    \ 0000bf 3003     `?L117`:    bmi     `?L296`
+    \ 0000c1 4c....               jmp     .kbank `?L42`
+    \ 0000c4          `?L296`:
+0121                  		  {
+0122                  			xRndInit=rand() % (int)vickyResX;
+0123                  			yRndInit=rand() % (int)vickyResY;
+0124                  			yRndMid=(rand() % (int)vickyResY);
+0125                  			colRnd=rand() % 255;
+0126                  			plot_circle (xRndInit, yRndInit, (yRndMid / 2),colRnd);
+0127                  		  } 
+0128                  		  clrBitmap();
+    \ 0000c4 22......             jsl     long:`?L272`
+0129                  		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+0130                  		  ANSILocate(1,1);
+0131                   		  printf("50 Ellipses...\n\r");
+    \ 0000c8 a9....               lda     ##`_StringLiteral_[53,48,32,69,108,108,105,112,115,101,115,46,46,46,10,13]`
+    \ 0000cb 22......             jsl     long:`?L276`
+    \ 0000cf          `?L263`:
+0132                  		  for (c=0;c<=50;c++)
+    \ 0000cf 830b                 sta     11,s
+    \ 0000d1 a93200               lda     ##50
+    \ 0000d4 38                   sec
+    \ 0000d5 e30b                 sbc     11,s
+    \ 0000d7 5003                 bvc     `?L123`
+    \ 0000d9 490080               eor     ##-32768
+    \ 0000dc 3003     `?L123`:    bmi     `?L297`
+    \ 0000de 4c....               jmp     .kbank `?L46`
+    \ 0000e1          `?L297`:
+0133                  		  {
+0134                  			xRndInit=rand() % (int)vickyResX;
+0135                  			xRndEnd=rand() % (int)vickyResX;
+0136                  			xRndMid=rand() % (int)vickyResX;
+0137                  			yRndMid=rand() % (int)vickyResY;
+0138                  			yRndInit=rand() % (int)vickyResY;
+0139                  			yRndEnd=rand() % (int)vickyResY;
+0140                  			colRnd=rand() % 255;
+0141                  			plot_ellipse (xRndInit, yRndInit, xRndEnd/2, yRndEnd/2, colRnd);
+0142                  		  }
+0143                  		  clrBitmap();
+    \ 0000e1 22......             jsl     long:`?L272`
+0144                  		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+0145                  		  ANSILocate(1,1);
+0146                   		  printf("30 Solid Ellipses... \n\r");
+    \ 0000e5 a9....               lda     ##`_StringLiteral_[51,48,32,83,111,108,105,100,32,69,108,108,105,112,115,101,115,46,46,46,32,10,13]`
+    \ 0000e8 22......             jsl     long:`?L276`
+    \ 0000ec          `?L262`:
+0147                  		  for (c=0;c<=30;c++)
+    \ 0000ec 830b                 sta     11,s
+    \ 0000ee a91e00               lda     ##30
+    \ 0000f1 38                   sec
+    \ 0000f2 e30b                 sbc     11,s
+    \ 0000f4 5003                 bvc     `?L129`
+    \ 0000f6 490080               eor     ##-32768
+    \ 0000f9 3003     `?L129`:    bmi     `?L298`
+    \ 0000fb 4c....               jmp     .kbank `?L50`
+    \ 0000fe          `?L298`:
+0148                  		  {
+0149                  			xRndInit=rand() % (int)vickyResX;
+0150                  			xRndEnd=rand() % (int)vickyResX;
+0151                  			xRndMid=rand() % (int)vickyResX;
+0152                  			yRndMid=rand() % (int)vickyResY;
+0153                  			yRndInit=rand() % (int)vickyResY;
+0154                  			yRndEnd=rand() % (int)vickyResY;
+0155                  			colRnd=rand() % 255;
+0156                  			plot_solid_ellipse (xRndInit, yRndInit, xRndEnd / 2, yRndEnd / 2, colRnd);
+0157                  		  }
+0158                  		  clrBitmap();
+    \ 0000fe 22......             jsl     long:`?L272`
+0159                  		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+0160                  		  ANSILocate(1,1);
+0161                  		 printf("30 Solid circles... \n\r");
+    \ 000102 a9....               lda     ##`_StringLiteral_[51,48,32,83,111,108,105,100,32,99,105,114,99,108,101,115,46,46,46,32,10,13]`
+    \ 000105 22......             jsl     long:printf
+0162                  		 srand(time(NULL)); 
+    \ 000109 a20000               ldx     ##0
+    \ 00010c 86..                 stx     dp:.tiny _Dp
+    \ 00010e 3b                   tsc
+    \ 00010f 18                   clc
+    \ 000110 691300               adc     ##19
+    \ 000113 22......             jsl     long:time
+    \ 000117 a313                 lda     19,s
+    \ 000119 22......             jsl     long:srand
+0163                  		 for (c=0;c<=30;c++)
+    \ 00011d a90000               lda     ##0
+    \ 000120 8309     `?L261`:    sta     9,s
+    \ 000122 a91e00               lda     ##30
+    \ 000125 38                   sec
+    \ 000126 e309                 sbc     9,s
+    \ 000128 5003                 bvc     `?L137`
+    \ 00012a 490080               eor     ##-32768
+    \ 00012d 3003     `?L137`:    bmi     `?L299`
+    \ 00012f 4c....               jmp     .kbank `?L54`
+    \ 000132          `?L299`:
+0164                  		  {
+0165                  			xRndInit=rand() % (int)vickyResX;
+0166                  			yRndInit=rand() % (int)vickyResY;
+0167                  			yRndMid=rand() % (int)vickyResY;
+0168                  			colRnd=rand() % 255;
+0169                  			plot_solid_circle (xRndInit, yRndInit, yRndMid / 2,colRnd);
+0170                  		  } 
+0171                  		  clrBitmap();
+    \ 000132 22......             jsl     long:`?L272`
+0172                  		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+0173                  		  ANSILocate(1,1);
+0174                  		  printf("300 Solid Rectangles...\n\r");
+    \ 000136 a9....               lda     ##`_StringLiteral_[51,48,48,32,83,111,108,105,100,32,82,101,99,116,97,110,103,108,101,115,46,46,46,10,13]`
+    \ 000139 22......             jsl     long:`?L276`
+    \ 00013d          `?L260`:
+0175                  		  	  for (c=0;c<=300;c++)
+    \ 00013d 830b                 sta     11,s
+    \ 00013f a92c01               lda     ##300
+    \ 000142 38                   sec
+    \ 000143 e30b                 sbc     11,s
+    \ 000145 5003                 bvc     `?L143`
+    \ 000147 490080               eor     ##-32768
+    \ 00014a 3003     `?L143`:    bmi     `?L300`
+    \ 00014c 4c....               jmp     .kbank `?L58`
+    \ 00014f          `?L300`:
+0176                  		  {
+0177                  			xRndInit=rand() % (int)vickyResX;
+0178                  			xRndEnd=rand() % (int)vickyResX;
+0179                  			xRndMid=rand() % (int)vickyResX;
+0180                  			yRndMid=rand() % (int)vickyResY;
+0181                  			yRndInit=rand() % (int)vickyResY;
+0182                  			yRndEnd=rand() % (int)vickyResY;
+0183                  			colRnd=rand() % 255;
+0184                  			plot_solid_rectangle (xRndInit, yRndInit, xRndEnd, yRndEnd, colRnd);
+0185                  		  } 
+0186                  		  
+0187                  		  clrBitmap();
+    \ 00014f 22......             jsl     long:`?L272`
+0188                  		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+0189                  		  ANSILocate(1,1);
+0190                  		  printf("10 Flood Filled Circles...\n\r");
+    \ 000153 a9....               lda     ##`_StringLiteral_[49,48,32,70,108,111,111,100,32,70,105,108,108,101,100,32,67,105,114,99,108,101,115,46,46,46,10,13]`
+    \ 000156 22......             jsl     long:`?L276`
+    \ 00015a          `?L259`:
+0191                  		  for (c=0;c<=10;c++)
+    \ 00015a 8305                 sta     5,s
+    \ 00015c a90a00               lda     ##10
+    \ 00015f 38                   sec
+    \ 000160 e305                 sbc     5,s
+    \ 000162 5003                 bvc     `?L149`
+    \ 000164 490080               eor     ##-32768
+    \ 000167 103d     `?L149`:    bpl     `?L62`
+0192                  		  {
+0193                  			xRndInit=rand() % (int)vickyResX;
+0194                  			yRndInit=rand() % (int)vickyResY;
+0195                  			yRndMid=rand() % (int)vickyResY;
+0196                  			colRnd=rand() % 255;
+0197                  			plot_circle (xRndInit, yRndInit, (yRndMid / 2),colRnd);
+0198                  			colRnd=rand() % 255;
+0199                  			floodFill (xRndInit, yRndInit,colRnd);
+0200                  		  } 
+0201                  		  clrBitmap();
+    \ 000169 22......             jsl     long:clrBitmap
+0202                  		  c=vickyVideomode (true,false,false,false,false,false,false,0);
+    \ 00016d f40000               pea     ##0
+    \ 000170 f40000               pea     ##0
+    \ 000173 f40000               pea     ##0
+    \ 000176 f40000               pea     ##0
+    \ 000179 f40000               pea     ##0
+    \ 00017c 64..                 stz     dp:.tiny (_Dp+2)
+    \ 00017e 64..                 stz     dp:.tiny _Dp
+    \ 000180 a90100               lda     ##1
+    \ 000183 22......             jsl     long:vickyVideomode
+    \ 000187 aa                   tax
+    \ 000188 3b                   tsc
+    \ 000189 18                   clc
+    \ 00018a 690a00               adc     ##10
+    \ 00018d 1b                   tcs
+0203                  		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+    \ 00018e 22......             jsl     long:ANSIClrScr
+0204                  		  ANSILocate(1,1);
+    \ 000192 a20100               ldx     ##1
+    \ 000195 86..                 stx     dp:.tiny _Dp
+    \ 000197 8a                   txa
+    \ 000198 22......             jsl     long:ANSILocate
+0205                  		  printf("Thx for watching this demo\n\r");
+    \ 00019c a9....               lda     ##`_StringLiteral_[84,104,120,32,102,111,114,32,119,97,116,99,104,105,110,103,32,116,104,105,115,32,100,101,109,111,10,13]`
+    \ 00019f 22......             jsl     long:`?L276`
+0206                  		  return 0;
+    \ 0001a3 4c....               jmp     .kbank `?L7`
+    \ 0001a6          `?L62`:
+    \ 0001a6 22......             jsl     long:rand
+    \ 0001aa 08                   php
+    \ 0001ab 78                   sei
+    \ 0001ac 8d1a01               sta     282
+    \ 0001af ad....               lda     vickyResX
+    \ 0001b2 8d1801               sta     280
+    \ 0001b5 ad1e01               lda     286
+    \ 0001b8 28                   plp
+    \ 0001b9 8307                 sta     7,s
+    \ 0001bb 22......             jsl     long:rand
+    \ 0001bf 08                   php
+    \ 0001c0 78                   sei
+    \ 0001c1 8d1a01               sta     282
+    \ 0001c4 ad....               lda     vickyResY
+    \ 0001c7 8d1801               sta     280
+    \ 0001ca ad1e01               lda     286
+    \ 0001cd 28                   plp
+    \ 0001ce 8309                 sta     9,s
+    \ 0001d0 22......             jsl     long:rand
+    \ 0001d4 08                   php
+    \ 0001d5 78                   sei
+    \ 0001d6 8d1a01               sta     282
+    \ 0001d9 ad....               lda     vickyResY
+    \ 0001dc 8d1801               sta     280
+    \ 0001df ad1e01               lda     286
+    \ 0001e2 28                   plp
+    \ 0001e3 8301                 sta     1,s
+    \ 0001e5 22......             jsl     long:rand
+    \ 0001e9 08                   php
+    \ 0001ea 78                   sei
+    \ 0001eb 8d1a01               sta     282
+    \ 0001ee 22......             jsl     long:`?L275`
+    \ 0001f2 28                   plp
+    \ 0001f3 8303                 sta     3,s
+    \ 0001f5 a303                 lda     3,s
+    \ 0001f7 48                   pha
+    \ 0001f8 a303                 lda     3,s
+    \ 0001fa 08                   php
+    \ 0001fb 78                   sei
+    \ 0001fc 8d1a01               sta     282
+    \ 0001ff a90200               lda     ##2
+    \ 000202 8d1801               sta     280
+    \ 000205 ad1c01               lda     284
+    \ 000208 28                   plp
+    \ 000209 85..                 sta     dp:.tiny (_Dp+2)
+    \ 00020b a30b                 lda     11,s
+    \ 00020d 85..                 sta     dp:.tiny _Dp
+    \ 00020f a309                 lda     9,s
+    \ 000211 22......             jsl     long:plot_circle
+    \ 000215 68                   pla
+    \ 000216 22......             jsl     long:rand
+    \ 00021a 08                   php
+    \ 00021b 78                   sei
+    \ 00021c 8d1a01               sta     282
+    \ 00021f 22......             jsl     long:`?L275`
+    \ 000223 28                   plp
+    \ 000224 8301                 sta     1,s
+    \ 000226 a301                 lda     1,s
+    \ 000228 48                   pha
+    \ 000229 a30b                 lda     11,s
+    \ 00022b 85..                 sta     dp:.tiny _Dp
+    \ 00022d a309                 lda     9,s
+    \ 00022f 22......             jsl     long:floodFill
+    \ 000233 68                   pla
+    \ 000234 a305                 lda     5,s
+    \ 000236 1a                   inc     a
+    \ 000237 4c....               jmp     .kbank `?L259`
+    \ 00023a          `?L58`:
+    \ 00023a 22......             jsl     long:rand
+    \ 00023e 08                   php
+    \ 00023f 78                   sei
+    \ 000240 8d1a01               sta     282
+    \ 000243 ad....               lda     vickyResX
+    \ 000246 8d1801               sta     280
+    \ 000249 ad1e01               lda     286
+    \ 00024c 28                   plp
+    \ 00024d 8303                 sta     3,s
+    \ 00024f 22......             jsl     long:rand
+    \ 000253 08                   php
+    \ 000254 78                   sei
+    \ 000255 8d1a01               sta     282
+    \ 000258 ad....               lda     vickyResX
+    \ 00025b 8d1801               sta     280
+    \ 00025e ad1e01               lda     286
+    \ 000261 28                   plp
+    \ 000262 8305                 sta     5,s
+    \ 000264 22......             jsl     long:rand
+    \ 000268 08                   php
+    \ 000269 78                   sei
+    \ 00026a 8d1a01               sta     282
+    \ 00026d ad....               lda     vickyResX
+    \ 000270 8d1801               sta     280
+    \ 000273 ad1e01               lda     286
+    \ 000276 28                   plp
+    \ 000277 8301                 sta     1,s
+    \ 000279 22......             jsl     long:rand
+    \ 00027d 08                   php
+    \ 00027e 78                   sei
+    \ 00027f 8d1a01               sta     282
+    \ 000282 ad....               lda     vickyResY
+    \ 000285 8d1801               sta     280
+    \ 000288 ad1e01               lda     286
+    \ 00028b 28                   plp
+    \ 00028c 8301                 sta     1,s
+    \ 00028e 22......             jsl     long:rand
+    \ 000292 08                   php
+    \ 000293 78                   sei
+    \ 000294 8d1a01               sta     282
+    \ 000297 ad....               lda     vickyResY
+    \ 00029a 8d1801               sta     280
+    \ 00029d ad1e01               lda     286
+    \ 0002a0 28                   plp
+    \ 0002a1 8301                 sta     1,s
+    \ 0002a3 22......             jsl     long:rand
+    \ 0002a7 08                   php
+    \ 0002a8 78                   sei
+    \ 0002a9 8d1a01               sta     282
+    \ 0002ac ad....               lda     vickyResY
+    \ 0002af 8d1801               sta     280
+    \ 0002b2 ad1e01               lda     286
+    \ 0002b5 28                   plp
+    \ 0002b6 8307                 sta     7,s
+    \ 0002b8 22......             jsl     long:rand
+    \ 0002bc 08                   php
+    \ 0002bd 78                   sei
+    \ 0002be 8d1a01               sta     282
+    \ 0002c1 22......             jsl     long:`?L275`
+    \ 0002c5 28                   plp
+    \ 0002c6 8309                 sta     9,s
+    \ 0002c8 a309                 lda     9,s
+    \ 0002ca 48                   pha
+    \ 0002cb a309                 lda     9,s
+    \ 0002cd 48                   pha
+    \ 0002ce a309                 lda     9,s
+    \ 0002d0 85..                 sta     dp:.tiny (_Dp+2)
+    \ 0002d2 a305                 lda     5,s
+    \ 0002d4 85..                 sta     dp:.tiny _Dp
+    \ 0002d6 a307                 lda     7,s
+    \ 0002d8 22......             jsl     long:plot_solid_rectangle
+    \ 0002dc 68                   pla
+    \ 0002dd 68                   pla
+    \ 0002de a30b                 lda     11,s
+    \ 0002e0 1a                   inc     a
+    \ 0002e1 4c....               jmp     .kbank `?L260`
+    \ 0002e4          `?L54`:
+    \ 0002e4 22......             jsl     long:rand
+    \ 0002e8 08                   php
+    \ 0002e9 78                   sei
+    \ 0002ea 8d1a01               sta     282
+    \ 0002ed ad....               lda     vickyResX
+    \ 0002f0 8d1801               sta     280
+    \ 0002f3 ad1e01               lda     286
+    \ 0002f6 28                   plp
+    \ 0002f7 8301                 sta     1,s
+    \ 0002f9 22......             jsl     long:rand
+    \ 0002fd 08                   php
+    \ 0002fe 78                   sei
+    \ 0002ff 8d1a01               sta     282
+    \ 000302 ad....               lda     vickyResY
+    \ 000305 8d1801               sta     280
+    \ 000308 ad1e01               lda     286
+    \ 00030b 28                   plp
+    \ 00030c 8303                 sta     3,s
+    \ 00030e 22......             jsl     long:rand
+    \ 000312 08                   php
+    \ 000313 78                   sei
+    \ 000314 8d1a01               sta     282
+    \ 000317 ad....               lda     vickyResY
+    \ 00031a 8d1801               sta     280
+    \ 00031d ad1e01               lda     286
+    \ 000320 28                   plp
+    \ 000321 8305                 sta     5,s
+    \ 000323 22......             jsl     long:rand
+    \ 000327 08                   php
+    \ 000328 78                   sei
+    \ 000329 8d1a01               sta     282
+    \ 00032c 22......             jsl     long:`?L275`
+    \ 000330 28                   plp
+    \ 000331 8307                 sta     7,s
+    \ 000333 a307                 lda     7,s
+    \ 000335 48                   pha
+    \ 000336 a307                 lda     7,s
+    \ 000338 08                   php
+    \ 000339 78                   sei
+    \ 00033a 8d1a01               sta     282
+    \ 00033d a90200               lda     ##2
+    \ 000340 8d1801               sta     280
+    \ 000343 ad1c01               lda     284
+    \ 000346 28                   plp
+    \ 000347 85..                 sta     dp:.tiny (_Dp+2)
+    \ 000349 a305                 lda     5,s
+    \ 00034b 85..                 sta     dp:.tiny _Dp
+    \ 00034d a303                 lda     3,s
+    \ 00034f 22......             jsl     long:plot_solid_circle
+    \ 000353 68                   pla
+    \ 000354 a309                 lda     9,s
+    \ 000356 1a                   inc     a
+    \ 000357 4c....               jmp     .kbank `?L261`
+    \ 00035a          `?L50`:
+    \ 00035a 22......             jsl     long:rand
+    \ 00035e 08                   php
+    \ 00035f 78                   sei
+    \ 000360 8d1a01               sta     282
+    \ 000363 ad....               lda     vickyResX
+    \ 000366 8d1801               sta     280
+    \ 000369 ad1e01               lda     286
+    \ 00036c 28                   plp
+    \ 00036d 8303                 sta     3,s
+    \ 00036f 22......             jsl     long:rand
+    \ 000373 08                   php
+    \ 000374 78                   sei
+    \ 000375 8d1a01               sta     282
+    \ 000378 ad....               lda     vickyResX
+    \ 00037b 8d1801               sta     280
+    \ 00037e ad1e01               lda     286
+    \ 000381 28                   plp
+    \ 000382 8305                 sta     5,s
+    \ 000384 22......             jsl     long:rand
+    \ 000388 08                   php
+    \ 000389 78                   sei
+    \ 00038a 8d1a01               sta     282
+    \ 00038d ad....               lda     vickyResX
+    \ 000390 8d1801               sta     280
+    \ 000393 ad1e01               lda     286
+    \ 000396 28                   plp
+    \ 000397 8301                 sta     1,s
+    \ 000399 22......             jsl     long:rand
+    \ 00039d 08                   php
+    \ 00039e 78                   sei
+    \ 00039f 8d1a01               sta     282
+    \ 0003a2 ad....               lda     vickyResY
+    \ 0003a5 8d1801               sta     280
+    \ 0003a8 ad1e01               lda     286
+    \ 0003ab 28                   plp
+    \ 0003ac 8301                 sta     1,s
+    \ 0003ae 22......             jsl     long:rand
+    \ 0003b2 08                   php
+    \ 0003b3 78                   sei
+    \ 0003b4 8d1a01               sta     282
+    \ 0003b7 ad....               lda     vickyResY
+    \ 0003ba 8d1801               sta     280
+    \ 0003bd ad1e01               lda     286
+    \ 0003c0 28                   plp
+    \ 0003c1 8301                 sta     1,s
+    \ 0003c3 22......             jsl     long:rand
+    \ 0003c7 08                   php
+    \ 0003c8 78                   sei
+    \ 0003c9 8d1a01               sta     282
+    \ 0003cc ad....               lda     vickyResY
+    \ 0003cf 8d1801               sta     280
+    \ 0003d2 ad1e01               lda     286
+    \ 0003d5 28                   plp
+    \ 0003d6 8307                 sta     7,s
+    \ 0003d8 22......             jsl     long:rand
+    \ 0003dc 08                   php
+    \ 0003dd 78                   sei
+    \ 0003de 8d1a01               sta     282
+    \ 0003e1 22......             jsl     long:`?L275`
+    \ 0003e5 28                   plp
+    \ 0003e6 8309                 sta     9,s
+    \ 0003e8 a309                 lda     9,s
+    \ 0003ea 48                   pha
+    \ 0003eb a309                 lda     9,s
+    \ 0003ed 08                   php
+    \ 0003ee 78                   sei
+    \ 0003ef 8d1a01               sta     282
+    \ 0003f2 a90200               lda     ##2
+    \ 0003f5 8d1801               sta     280
+    \ 0003f8 ad1c01               lda     284
+    \ 0003fb 28                   plp
+    \ 0003fc a20000               ldx     ##0
+    \ 0003ff a8                   tay
+    \ 000400 1001                 bpl     `?L183`
+    \ 000402 ca                   dex
+    \ 000403          `?L183`:
+    \ 000403 22......             jsl     long:_SInt32ToFloat32
+    \ 000407 da                   phx
+    \ 000408 48                   pha
+    \ 000409 a307                 lda     7,s
+    \ 00040b 85..                 sta     dp:.tiny _Dp
+    \ 00040d a30b                 lda     11,s
+    \ 00040f 08                   php
+    \ 000410 78                   sei
+    \ 000411 8d1a01               sta     282
+    \ 000414 a90200               lda     ##2
+    \ 000417 8d1801               sta     280
+    \ 00041a ad1c01               lda     284
+    \ 00041d 28                   plp
+    \ 00041e a20000               ldx     ##0
+    \ 000421 a8                   tay
+    \ 000422 1001                 bpl     `?L186`
+    \ 000424 ca                   dex
+    \ 000425          `?L186`:
+    \ 000425 22......             jsl     long:_SInt32ToFloat32
+    \ 000429 86..                 stx     dp:.tiny (_Dp+6)
+    \ 00042b 85..                 sta     dp:.tiny (_Dp+4)
+    \ 00042d a309                 lda     9,s
+    \ 00042f 22......             jsl     long:plot_solid_ellipse
+    \ 000433 68                   pla
+    \ 000434 68                   pla
+    \ 000435 68                   pla
+    \ 000436 a30b                 lda     11,s
+    \ 000438 1a                   inc     a
+    \ 000439 4c....               jmp     .kbank `?L262`
+    \ 00043c          `?L46`:
+    \ 00043c 22......             jsl     long:rand
+    \ 000440 08                   php
+    \ 000441 78                   sei
+    \ 000442 8d1a01               sta     282
+    \ 000445 ad....               lda     vickyResX
+    \ 000448 8d1801               sta     280
+    \ 00044b ad1e01               lda     286
+    \ 00044e 28                   plp
+    \ 00044f 8303                 sta     3,s
+    \ 000451 22......             jsl     long:rand
+    \ 000455 08                   php
+    \ 000456 78                   sei
+    \ 000457 8d1a01               sta     282
+    \ 00045a ad....               lda     vickyResX
+    \ 00045d 8d1801               sta     280
+    \ 000460 ad1e01               lda     286
+    \ 000463 28                   plp
+    \ 000464 8305                 sta     5,s
+    \ 000466 22......             jsl     long:rand
+    \ 00046a 08                   php
+    \ 00046b 78                   sei
+    \ 00046c 8d1a01               sta     282
+    \ 00046f ad....               lda     vickyResX
+    \ 000472 8d1801               sta     280
+    \ 000475 ad1e01               lda     286
+    \ 000478 28                   plp
+    \ 000479 8301                 sta     1,s
+    \ 00047b 22......             jsl     long:rand
+    \ 00047f 08                   php
+    \ 000480 78                   sei
+    \ 000481 8d1a01               sta     282
+    \ 000484 ad....               lda     vickyResY
+    \ 000487 8d1801               sta     280
+    \ 00048a ad1e01               lda     286
+    \ 00048d 28                   plp
+    \ 00048e 8301                 sta     1,s
+    \ 000490 22......             jsl     long:rand
+    \ 000494 08                   php
+    \ 000495 78                   sei
+    \ 000496 8d1a01               sta     282
+    \ 000499 ad....               lda     vickyResY
+    \ 00049c 8d1801               sta     280
+    \ 00049f ad1e01               lda     286
+    \ 0004a2 28                   plp
+    \ 0004a3 8301                 sta     1,s
+    \ 0004a5 22......             jsl     long:rand
+    \ 0004a9 08                   php
+    \ 0004aa 78                   sei
+    \ 0004ab 8d1a01               sta     282
+    \ 0004ae ad....               lda     vickyResY
+    \ 0004b1 8d1801               sta     280
+    \ 0004b4 ad1e01               lda     286
+    \ 0004b7 28                   plp
+    \ 0004b8 8307                 sta     7,s
+    \ 0004ba 22......             jsl     long:rand
+    \ 0004be 08                   php
+    \ 0004bf 78                   sei
+    \ 0004c0 8d1a01               sta     282
+    \ 0004c3 22......             jsl     long:`?L275`
+    \ 0004c7 28                   plp
+    \ 0004c8 8309                 sta     9,s
+    \ 0004ca a309                 lda     9,s
+    \ 0004cc 48                   pha
+    \ 0004cd a309                 lda     9,s
+    \ 0004cf 08                   php
+    \ 0004d0 78                   sei
+    \ 0004d1 8d1a01               sta     282
+    \ 0004d4 a90200               lda     ##2
+    \ 0004d7 8d1801               sta     280
+    \ 0004da ad1c01               lda     284
+    \ 0004dd 28                   plp
+    \ 0004de a20000               ldx     ##0
+    \ 0004e1 a8                   tay
+    \ 0004e2 1001                 bpl     `?L197`
+    \ 0004e4 ca                   dex
+    \ 0004e5          `?L197`:
+    \ 0004e5 22......             jsl     long:_SInt32ToFloat32
+    \ 0004e9 da                   phx
+    \ 0004ea 48                   pha
+    \ 0004eb a307                 lda     7,s
+    \ 0004ed 85..                 sta     dp:.tiny _Dp
+    \ 0004ef a30b                 lda     11,s
+    \ 0004f1 08                   php
+    \ 0004f2 78                   sei
+    \ 0004f3 8d1a01               sta     282
+    \ 0004f6 a90200               lda     ##2
+    \ 0004f9 8d1801               sta     280
+    \ 0004fc ad1c01               lda     284
+    \ 0004ff 28                   plp
+    \ 000500 a20000               ldx     ##0
+    \ 000503 a8                   tay
+    \ 000504 1001                 bpl     `?L200`
+    \ 000506 ca                   dex
+    \ 000507          `?L200`:
+    \ 000507 22......             jsl     long:_SInt32ToFloat32
+    \ 00050b 86..                 stx     dp:.tiny (_Dp+6)
+    \ 00050d 85..                 sta     dp:.tiny (_Dp+4)
+    \ 00050f a309                 lda     9,s
+    \ 000511 22......             jsl     long:plot_ellipse
+    \ 000515 68                   pla
+    \ 000516 68                   pla
+    \ 000517 68                   pla
+    \ 000518 a30b                 lda     11,s
+    \ 00051a 1a                   inc     a
+    \ 00051b 4c....               jmp     .kbank `?L263`
+    \ 00051e          `?L42`:
+    \ 00051e 22......             jsl     long:rand
+    \ 000522 08                   php
+    \ 000523 78                   sei
+    \ 000524 8d1a01               sta     282
+    \ 000527 ad....               lda     vickyResX
+    \ 00052a 8d1801               sta     280
+    \ 00052d ad1e01               lda     286
+    \ 000530 28                   plp
+    \ 000531 8301                 sta     1,s
+    \ 000533 22......             jsl     long:rand
+    \ 000537 08                   php
+    \ 000538 78                   sei
+    \ 000539 8d1a01               sta     282
+    \ 00053c ad....               lda     vickyResY
+    \ 00053f 8d1801               sta     280
+    \ 000542 ad1e01               lda     286
+    \ 000545 28                   plp
+    \ 000546 8303                 sta     3,s
+    \ 000548 22......             jsl     long:rand
+    \ 00054c 08                   php
+    \ 00054d 78                   sei
+    \ 00054e 8d1a01               sta     282
+    \ 000551 ad....               lda     vickyResY
+    \ 000554 8d1801               sta     280
+    \ 000557 ad1e01               lda     286
+    \ 00055a 28                   plp
+    \ 00055b 8305                 sta     5,s
+    \ 00055d 22......             jsl     long:rand
+    \ 000561 08                   php
+    \ 000562 78                   sei
+    \ 000563 8d1a01               sta     282
+    \ 000566 22......             jsl     long:`?L275`
+    \ 00056a 28                   plp
+    \ 00056b 8307                 sta     7,s
+    \ 00056d a307                 lda     7,s
+    \ 00056f 48                   pha
+    \ 000570 a307                 lda     7,s
+    \ 000572 08                   php
+    \ 000573 78                   sei
+    \ 000574 8d1a01               sta     282
+    \ 000577 a90200               lda     ##2
+    \ 00057a 8d1801               sta     280
+    \ 00057d ad1c01               lda     284
+    \ 000580 28                   plp
+    \ 000581 85..                 sta     dp:.tiny (_Dp+2)
+    \ 000583 a305                 lda     5,s
+    \ 000585 85..                 sta     dp:.tiny _Dp
+    \ 000587 a303                 lda     3,s
+    \ 000589 22......             jsl     long:plot_circle
+    \ 00058d 68                   pla
+    \ 00058e a309                 lda     9,s
+    \ 000590 1a                   inc     a
+    \ 000591 4c....               jmp     .kbank `?L264`
+    \ 000594          `?L38`:
+    \ 000594 22......             jsl     long:rand
+    \ 000598 08                   php
+    \ 000599 78                   sei
+    \ 00059a 8d1a01               sta     282
+    \ 00059d ad....               lda     vickyResX
+    \ 0005a0 8d1801               sta     280
+    \ 0005a3 ad1e01               lda     286
+    \ 0005a6 28                   plp
+    \ 0005a7 8303                 sta     3,s
+    \ 0005a9 22......             jsl     long:rand
+    \ 0005ad 08                   php
+    \ 0005ae 78                   sei
+    \ 0005af 8d1a01               sta     282
+    \ 0005b2 ad....               lda     vickyResX
+    \ 0005b5 8d1801               sta     280
+    \ 0005b8 ad1e01               lda     286
+    \ 0005bb 28                   plp
+    \ 0005bc 8305                 sta     5,s
+    \ 0005be 22......             jsl     long:rand
+    \ 0005c2 08                   php
+    \ 0005c3 78                   sei
+    \ 0005c4 8d1a01               sta     282
+    \ 0005c7 ad....               lda     vickyResX
+    \ 0005ca 8d1801               sta     280
+    \ 0005cd ad1e01               lda     286
+    \ 0005d0 28                   plp
+    \ 0005d1 8301                 sta     1,s
+    \ 0005d3 22......             jsl     long:rand
+    \ 0005d7 08                   php
+    \ 0005d8 78                   sei
+    \ 0005d9 8d1a01               sta     282
+    \ 0005dc ad....               lda     vickyResY
+    \ 0005df 8d1801               sta     280
+    \ 0005e2 ad1e01               lda     286
+    \ 0005e5 28                   plp
+    \ 0005e6 8301                 sta     1,s
+    \ 0005e8 22......             jsl     long:rand
+    \ 0005ec 08                   php
+    \ 0005ed 78                   sei
+    \ 0005ee 8d1a01               sta     282
+    \ 0005f1 ad....               lda     vickyResY
+    \ 0005f4 8d1801               sta     280
+    \ 0005f7 ad1e01               lda     286
+    \ 0005fa 28                   plp
+    \ 0005fb 8301                 sta     1,s
+    \ 0005fd 22......             jsl     long:rand
+    \ 000601 08                   php
+    \ 000602 78                   sei
+    \ 000603 8d1a01               sta     282
+    \ 000606 ad....               lda     vickyResY
+    \ 000609 8d1801               sta     280
+    \ 00060c ad1e01               lda     286
+    \ 00060f 28                   plp
+    \ 000610 8307                 sta     7,s
+    \ 000612 22......             jsl     long:rand
+    \ 000616 08                   php
+    \ 000617 78                   sei
+    \ 000618 8d1a01               sta     282
+    \ 00061b 22......             jsl     long:`?L275`
+    \ 00061f 28                   plp
+    \ 000620 8309                 sta     9,s
+    \ 000622 a309                 lda     9,s
+    \ 000624 48                   pha
+    \ 000625 a309                 lda     9,s
+    \ 000627 48                   pha
+    \ 000628 a309                 lda     9,s
+    \ 00062a 85..                 sta     dp:.tiny (_Dp+2)
+    \ 00062c a305                 lda     5,s
+    \ 00062e 85..                 sta     dp:.tiny _Dp
+    \ 000630 a307                 lda     7,s
+    \ 000632 22......             jsl     long:plot_rectangle
+    \ 000636 68                   pla
+    \ 000637 68                   pla
+    \ 000638 a30b                 lda     11,s
+    \ 00063a 1a                   inc     a
+    \ 00063b 4c....               jmp     .kbank `?L265`
+    \ 00063e          `?L34`:
+    \ 00063e 22......             jsl     long:rand
+    \ 000642 08                   php
+    \ 000643 78                   sei
+    \ 000644 8d1a01               sta     282
+    \ 000647 ad....               lda     vickyResX
+    \ 00064a 8d1801               sta     280
+    \ 00064d ad1e01               lda     286
+    \ 000650 28                   plp
+    \ 000651 8301                 sta     1,s
+    \ 000653 22......             jsl     long:rand
+    \ 000657 08                   php
+    \ 000658 78                   sei
+    \ 000659 8d1a01               sta     282
+    \ 00065c ad....               lda     vickyResX
+    \ 00065f 8d1801               sta     280
+    \ 000662 ad1e01               lda     286
+    \ 000665 28                   plp
+    \ 000666 8303                 sta     3,s
+    \ 000668 22......             jsl     long:rand
+    \ 00066c 08                   php
+    \ 00066d 78                   sei
+    \ 00066e 8d1a01               sta     282
+    \ 000671 ad....               lda     vickyResX
+    \ 000674 8d1801               sta     280
+    \ 000677 ad1e01               lda     286
+    \ 00067a 28                   plp
+    \ 00067b 8305                 sta     5,s
+    \ 00067d 22......             jsl     long:rand
+    \ 000681 08                   php
+    \ 000682 78                   sei
+    \ 000683 8d1a01               sta     282
+    \ 000686 ad....               lda     vickyResX
+    \ 000689 8d1801               sta     280
+    \ 00068c ad1e01               lda     286
+    \ 00068f 28                   plp
+    \ 000690 8307                 sta     7,s
+    \ 000692 22......             jsl     long:rand
+    \ 000696 08                   php
+    \ 000697 78                   sei
+    \ 000698 8d1a01               sta     282
+    \ 00069b ad....               lda     vickyResY
+    \ 00069e 8d1801               sta     280
+    \ 0006a1 ad1e01               lda     286
+    \ 0006a4 28                   plp
+    \ 0006a5 8309                 sta     9,s
+    \ 0006a7 22......             jsl     long:rand
+    \ 0006ab 08                   php
+    \ 0006ac 78                   sei
+    \ 0006ad 8d1a01               sta     282
+    \ 0006b0 ad....               lda     vickyResY
+    \ 0006b3 8d1801               sta     280
+    \ 0006b6 ad1e01               lda     286
+    \ 0006b9 28                   plp
+    \ 0006ba 830b                 sta     11,s
+    \ 0006bc 22......             jsl     long:rand
+    \ 0006c0 08                   php
+    \ 0006c1 78                   sei
+    \ 0006c2 8d1a01               sta     282
+    \ 0006c5 ad....               lda     vickyResY
+    \ 0006c8 8d1801               sta     280
+    \ 0006cb ad1e01               lda     286
+    \ 0006ce 28                   plp
+    \ 0006cf 830d                 sta     13,s
+    \ 0006d1 22......             jsl     long:rand
+    \ 0006d5 08                   php
+    \ 0006d6 78                   sei
+    \ 0006d7 8d1a01               sta     282
+    \ 0006da ad....               lda     vickyResY
+    \ 0006dd 8d1801               sta     280
+    \ 0006e0 ad1e01               lda     286
+    \ 0006e3 28                   plp
+    \ 0006e4 830f                 sta     15,s
+    \ 0006e6 22......             jsl     long:rand
+    \ 0006ea 08                   php
+    \ 0006eb 78                   sei
+    \ 0006ec 8d1a01               sta     282
+    \ 0006ef 22......             jsl     long:`?L275`
+    \ 0006f3 28                   plp
+    \ 0006f4 8311                 sta     17,s
+    \ 0006f6 a311                 lda     17,s
+    \ 0006f8 48                   pha
+    \ 0006f9 a311                 lda     17,s
+    \ 0006fb 48                   pha
+    \ 0006fc a307                 lda     7,s
+    \ 0006fe 48                   pha
+    \ 0006ff a313                 lda     19,s
+    \ 000701 48                   pha
+    \ 000702 a30f                 lda     15,s
+    \ 000704 48                   pha
+    \ 000705 a315                 lda     21,s
+    \ 000707 48                   pha
+    \ 000708 a311                 lda     17,s
+    \ 00070a 85..                 sta     dp:.tiny (_Dp+2)
+    \ 00070c a315                 lda     21,s
+    \ 00070e 85..                 sta     dp:.tiny _Dp
+    \ 000710 a30d                 lda     13,s
+    \ 000712 22......             jsl     long:plot_bezier
+    \ 000716 3b                   tsc
+    \ 000717 18                   clc
+    \ 000718 690c00               adc     ##12
+    \ 00071b 1b                   tcs
+    \ 00071c a313                 lda     19,s
+    \ 00071e 1a                   inc     a
+    \ 00071f 4c....               jmp     .kbank `?L266`
+    \ 000722          `?L30`:
+    \ 000722 22......             jsl     long:rand
+    \ 000726 08                   php
+    \ 000727 78                   sei
+    \ 000728 8d1a01               sta     282
+    \ 00072b ad....               lda     vickyResX
+    \ 00072e 8d1801               sta     280
+    \ 000731 ad1e01               lda     286
+    \ 000734 28                   plp
+    \ 000735 8301                 sta     1,s
+    \ 000737 22......             jsl     long:rand
+    \ 00073b 08                   php
+    \ 00073c 78                   sei
+    \ 00073d 8d1a01               sta     282
+    \ 000740 ad....               lda     vickyResX
+    \ 000743 8d1801               sta     280
+    \ 000746 ad1e01               lda     286
+    \ 000749 28                   plp
+    \ 00074a 8303                 sta     3,s
+    \ 00074c 22......             jsl     long:rand
+    \ 000750 08                   php
+    \ 000751 78                   sei
+    \ 000752 8d1a01               sta     282
+    \ 000755 ad....               lda     vickyResY
+    \ 000758 8d1801               sta     280
+    \ 00075b ad1e01               lda     286
+    \ 00075e 28                   plp
+    \ 00075f 8305                 sta     5,s
+    \ 000761 22......             jsl     long:rand
+    \ 000765 08                   php
+    \ 000766 78                   sei
+    \ 000767 8d1a01               sta     282
+    \ 00076a ad....               lda     vickyResY
+    \ 00076d 8d1801               sta     280
+    \ 000770 ad1e01               lda     286
+    \ 000773 28                   plp
+    \ 000774 8307                 sta     7,s
+    \ 000776 22......             jsl     long:rand
+    \ 00077a 08                   php
+    \ 00077b 78                   sei
+    \ 00077c 8d1a01               sta     282
+    \ 00077f 22......             jsl     long:`?L275`
+    \ 000783 28                   plp
+    \ 000784 8309                 sta     9,s
+    \ 000786 a309                 lda     9,s
+    \ 000788 48                   pha
+    \ 000789 a309                 lda     9,s
+    \ 00078b 48                   pha
+    \ 00078c a307                 lda     7,s
+    \ 00078e 85..                 sta     dp:.tiny (_Dp+2)
+    \ 000790 a309                 lda     9,s
+    \ 000792 85..                 sta     dp:.tiny _Dp
+    \ 000794 a305                 lda     5,s
+    \ 000796 22......             jsl     long:plot_line
+    \ 00079a 68                   pla
+    \ 00079b 68                   pla
+    \ 00079c a30b                 lda     11,s
+    \ 00079e 1a                   inc     a
+    \ 00079f 4c....               jmp     .kbank `?L267`
+    \ 0007a2 a307     `?L11`:     lda     7,s
+    \ 0007a4 c90500               cmp     ##5
+    \ 0007a7 f060                 beq     `?L15`
+    \ 0007a9 a90000               lda     ##0
+    \ 0007ac 8301                 sta     1,s
+    \ 0007ae 8303     `?L270`:    sta     3,s
+    \ 0007b0 a9ff00               lda     ##255
+    \ 0007b3 38                   sec
+    \ 0007b4 e303                 sbc     3,s
+    \ 0007b6 5003                 bvc     `?L233`
+    \ 0007b8 490080               eor     ##-32768
+    \ 0007bb 3050     `?L233`:    bmi     `?L16`
+    \ 0007bd a9ff00               lda     ##255
+    \ 0007c0 48                   pha
+    \ 0007c1 22......             jsl     long:rand
+    \ 0007c5 08                   php
+    \ 0007c6 78                   sei
+    \ 0007c7 8d1a01               sta     282
+    \ 0007ca 22......             jsl     long:`?L275`
+    \ 0007ce 28                   plp
+    \ 0007cf 48                   pha
+    \ 0007d0 22......             jsl     long:rand
+    \ 0007d4 08                   php
+    \ 0007d5 78                   sei
+    \ 0007d6 8d1a01               sta     282
+    \ 0007d9 22......             jsl     long:`?L275`
+    \ 0007dd 28                   plp
+    \ 0007de 48                   pha
+    \ 0007df 22......             jsl     long:rand
+    \ 0007e3 08                   php
+    \ 0007e4 78                   sei
+    \ 0007e5 8d1a01               sta     282
+    \ 0007e8 22......             jsl     long:`?L275`
+    \ 0007ec 28                   plp
+    \ 0007ed 48                   pha
+    \ 0007ee a30b                 lda     11,s
+    \ 0007f0 48                   pha
+    \ 0007f1 a90000               lda     ##0
+    \ 0007f4 22......             jsl     long:vickyPaletteCol
+    \ 0007f8 830b                 sta     11,s
+    \ 0007fa 3b                   tsc
+    \ 0007fb 18                   clc
+    \ 0007fc 690a00               adc     ##10
+    \ 0007ff 1b                   tcs
+    \ 000800 a303                 lda     3,s
+    \ 000802 1a                   inc     a
+    \ 000803 8301                 sta     1,s
+    \ 000805 a301                 lda     1,s
+    \ 000807 80a5                 bra     `?L270`
+    \ 000809          `?L15`:
+    \ 000809 22......             jsl     long:vickyDefPalette
+    \ 00080d a90000   `?L16`:     lda     ##0
+    \ 000810 8309     `?L269`:    sta     9,s
+    \ 000812 a9ff00               lda     ##255
+    \ 000815 38                   sec
+    \ 000816 e309                 sbc     9,s
+    \ 000818 5003                 bvc     `?L240`
+    \ 00081a 490080               eor     ##-32768
+    \ 00081d 1006     `?L240`:    bpl     `?L22`
+    \ 00081f a307                 lda     7,s
+    \ 000821 1a                   inc     a
+    \ 000822 4c....               jmp     .kbank `?L271`
+    \ 000825 a90000   `?L22`:     lda     ##0
+    \ 000828 8301                 sta     1,s
+    \ 00082a 8305     `?L268`:    sta     5,s
+    \ 00082c a305                 lda     5,s
+    \ 00082e 38                   sec
+    \ 00082f e91400               sbc     ##20
+    \ 000832 5003                 bvc     `?L242`
+    \ 000834 490080               eor     ##-32768
+    \ 000837 3009     `?L242`:    bmi     `?L26`
+    \ 000839 a309                 lda     9,s
+    \ 00083b 1a                   inc     a
+    \ 00083c 8301                 sta     1,s
+    \ 00083e a301                 lda     1,s
+    \ 000840 80ce                 bra     `?L269`
+    \ 000842 a307     `?L26`:     lda     7,s
+    \ 000844 0a                   asl     a
+    \ 000845 8303                 sta     3,s
+    \ 000847 8301                 sta     1,s
+    \ 000849 a303                 lda     3,s
+    \ 00084b 0a                   asl     a
+    \ 00084c 0a                   asl     a
+    \ 00084d 0a                   asl     a
+    \ 00084e 8303                 sta     3,s
+    \ 000850 18                   clc
+    \ 000851 6301                 adc     1,s
+    \ 000853 8301                 sta     1,s
+    \ 000855 a303                 lda     3,s
+    \ 000857 0a                   asl     a
+    \ 000858 8303                 sta     3,s
+    \ 00085a 18                   clc
+    \ 00085b 6301                 adc     1,s
+    \ 00085d 8301                 sta     1,s
+    \ 00085f a309                 lda     9,s
+    \ 000861 48                   pha
+    \ 000862 a303                 lda     3,s
+    \ 000864 18                   clc
+    \ 000865 6307                 adc     7,s
+    \ 000867 a20000               ldx     ##0
+    \ 00086a a8                   tay
+    \ 00086b 1001                 bpl     `?L244`
+    \ 00086d ca                   dex
+    \ 00086e          `?L244`:
+    \ 00086e 86..                 stx     dp:.tiny (_Dp+2)
+    \ 000870 85..                 sta     dp:.tiny _Dp
+    \ 000872 a93200               lda     ##50
+    \ 000875 18                   clc
+    \ 000876 630b                 adc     11,s
+    \ 000878 a20000               ldx     ##0
+    \ 00087b a8                   tay
+    \ 00087c 1001                 bpl     `?L246`
+    \ 00087e ca                   dex
+    \ 00087f          `?L246`:
+    \ 00087f 22......             jsl     long:plot
+    \ 000883 68                   pla
+    \ 000884 a305                 lda     5,s
+    \ 000886 1a                   inc     a
+    \ 000887 8301                 sta     1,s
+    \ 000889 a301                 lda     1,s
+    \ 00088b 809d                 bra     `?L268`
+    \ 00088d          `?L8`:
+0207                    } // screen
+0208                    else {return -1;}
+    \ 00088d a9ffff               lda     ##-1
+    \ 000890          `?L7`:
+0209                  }
+    \ 000890 a8                   tay
+    \ 000891 3b                   tsc
+    \ 000892 18                   clc
+    \ 000893 691a00               adc     ##26
+    \ 000896 1b                   tcs
+    \ 000897 98                   tya
+    \ 000898 6b                   rtl
+0210
+0211                  // ----------------------------------------
+0212                  // Helper functions 
+0213                  // ----------------------------------------
+0214
+0215                  // ----------------------------------------
+0216                  // Setup Graphic Screen
+0217                  // ----------------------------------------
+0218                  int setupScreen(int mode)
+0219                  {
+    \ 000000                      .section farcode,text
+    \ 000000                      .public setupScreen
+    \ 000000          setupScreen:
+    \ 000000 5a                   phy
+    \ 000001 5a                   phy
+0220                  	int status;
+0221                  	// VickyVideoMode (bool text,bool txtOverlay,bool bitmap,bool tiles,bool sprites,bool gammaFix,bool blank,int resolution {0-640x480|1-800x600|2-320x240|3-400x300})
+0222                  	status=vickyVideomode (true,true,true,false,true,true,false,mode);
+    \ 000002 48                   pha
+    \ 000003 f40000               pea     ##0
+    \ 000006 f40100               pea     ##1
+    \ 000009 f40100               pea     ##1
+    \ 00000c f40000               pea     ##0
+    \ 00000f a20100               ldx     ##1
+    \ 000012 86..                 stx     dp:.tiny (_Dp+2)
+    \ 000014 86..                 stx     dp:.tiny _Dp
+    \ 000016 8a                   txa
+    \ 000017 22......             jsl     long:vickyVideomode
+    \ 00001b aa                   tax
+    \ 00001c 3b                   tsc
+    \ 00001d 18                   clc
+    \ 00001e 690a00               adc     ##10
+    \ 000021 1b                   tcs
+    \ 000022 8a                   txa
+    \ 000023 8303                 sta     3,s
+0223                  	// VickyBitmap (int page {0-1}, bool enable, long address {0-0x1fffff (2 Mb)| 0-0x3fffff (4 Mb)}, int lut {0-7}, bool collision)
+0224                  	if (status!=-1)
+    \ 000025 a303                 lda     3,s
+    \ 000027 c9ffff               cmp     ##-1
+    \ 00002a f04a                 beq     `?L71`
+0225                  	{
+0226                  		status=vickyBitmap (0,true,0,0,false);
+    \ 00002c f40000               pea     ##0
+    \ 00002f 64..                 stz     dp:.tiny (_Dp+2)
+    \ 000031 a20100               ldx     ##1
+    \ 000034 86..                 stx     dp:.tiny _Dp
+    \ 000036 a90000               lda     ##0
+    \ 000039 85..                 sta     dp:.tiny (_Dp+4)
+    \ 00003b 85..                 sta     dp:.tiny (_Dp+6)
+    \ 00003d 22......             jsl     long:vickyBitmap
+    \ 000041 aa                   tax
+    \ 000042 68                   pla
+    \ 000043 8a                   txa
+    \ 000044 8303                 sta     3,s
+0227                  		if (status==0)
+    \ 000046 a303                 lda     3,s
+    \ 000048 d01d                 bne     `?L74`
+0228                  		{
+0229                  			ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
+    \ 00004a 22......             jsl     long:ANSIClrScr
+0230                  			ANSILocate(1,1);		// Locate cursor at 1,1
+    \ 00004e a20100               ldx     ##1
+    \ 000051 86..                 stx     dp:.tiny _Dp
+    \ 000053 8a                   txa
+    \ 000054 22......             jsl     long:ANSILocate
+0231                  			// Set Border size to 0 
+0232                  			BORDER_CTRL_REG = 0;
+    \ 000058 e220                 sep     #32
+    \ 00005a a900                 lda     #0
+    \ 00005c 8f0400af             sta     long:11468804
+    \ 000060 c220                 rep     #32
+0233                  			return 0;
+    \ 000062 a90000               lda     ##0
+    \ 000065 801c                 bra     `?L70`
+    \ 000067          `?L74`:
+0234                  		}
+0235                  		else 
+0236                  		{
+0237                  			printf ("Error %d while setting bitmap",status);
+    \ 000067 48                   pha
+    \ 000068 a9....               lda     ##`_StringLiteral_Error %d while setting bitmap`
+    \ 00006b 22......             jsl     long:printf
+    \ 00006f 8303                 sta     3,s
+0238                  			return status;
+    \ 000071 68                   pla
+    \ 000072 a303                 lda     3,s
+    \ 000074 800d                 bra     `?L70`
+    \ 000076          `?L71`:
+0239                  		} //Error setting Bitmap
+0240                  	}
+0241                  	else 
+0242                  	{
+0243                  		printf ("Error %d while setting VideoMode",status);
+    \ 000076 48                   pha
+    \ 000077 a9....               lda     ##`_StringLiteral_Error %d while setting VideoMode`
+    \ 00007a 22......             jsl     long:printf
+    \ 00007e 8303                 sta     3,s
+0244                  		return status;
+    \ 000080 68                   pla
+    \ 000081 a303                 lda     3,s
+    \ 000083          `?L70`:
+0245                  	} //Error setting videomode
+0246                  }
+    \ 000083 7a                   ply
+    \ 000084 7a                   ply
+    \ 000085 6b                   rtl
+0247
+0248                  // ----------------------------------------
+0249                  // Delay Function
+0250                  // credits https://www.quora.com/How-do-you-use-the-time-delay-in-C-programming
+0251                  // ----------------------------------------
+0252
+0253                  void delay(int delay) 
+0254                  { 
+    \ 000000                      .section farcode,text
+    \ 000000                      .public delay
+    \ 000000 a8       delay:      tay
+    \ 000001 3b                   tsc
+    \ 000002 38                   sec
+    \ 000003 e90a00               sbc     ##10
+    \ 000006 1b                   tcs
+    \ 000007 98                   tya
+    \ 000008 8301                 sta     1,s
+0255                   int now=time(NULL); 
+    \ 00000a a20000               ldx     ##0
+    \ 00000d 86..                 stx     dp:.tiny _Dp
+    \ 00000f 3b                   tsc
+    \ 000010 18                   clc
+    \ 000011 690300               adc     ##3
+    \ 000014 22......             jsl     long:time
+    \ 000018 a303                 lda     3,s
+    \ 00001a aa                   tax
+0256                   int later=now+delay; 
+    \ 00001b 8a                   txa
+    \ 00001c 18                   clc
+    \ 00001d 6301                 adc     1,s
+    \ 00001f 8301                 sta     1,s
+    \ 000021          `?L83`:
+0257                  	while(now<=later)
+    \ 000021 a301                 lda     1,s
+    \ 000023 86..                 stx     dp:.tiny _Dp
+    \ 000025 38                   sec
+    \ 000026 e5..                 sbc     dp:.tiny _Dp
+    \ 000028 5003                 bvc     `?L256`
+    \ 00002a 490080               eor     ##-32768
+    \ 00002d 3013     `?L256`:    bmi     `?L82`
+0258                  	    now=time(NULL); 
+    \ 00002f a20000               ldx     ##0
+    \ 000032 86..                 stx     dp:.tiny _Dp
+    \ 000034 3b                   tsc
+    \ 000035 18                   clc
+    \ 000036 690300               adc     ##3
+    \ 000039 22......             jsl     long:time
+    \ 00003d a303                 lda     3,s
+    \ 00003f aa                   tax
+    \ 000040 80df                 bra     `?L83`
+    \ 000042          `?L82`:
+0259                  } 
+    \ 000042 3b                   tsc
+    \ 000043 18                   clc
+    \ 000044 690a00               adc     ##10
+    \ 000047 1b                   tcs
+    \ 000048 6b                   rtl
+    \ 000000                      .section farcode,text
+    \ 000000          `?L272`:
+    \ 000000 22......             jsl     long:clrBitmap
+    \ 000004 22......             jsl     long:ANSIClrScr
+    \ 000008 a20100               ldx     ##1
+    \ 00000b 86..                 stx     dp:.tiny _Dp
+    \ 00000d 8a                   txa
+    \ 00000e 5c......             jmp     long:ANSILocate
+    \ 000000                      .section farcode,text
+    \ 000000 a9ff00   `?L275`:    lda     ##255
+    \ 000003 8d1801               sta     280
+    \ 000006 ad1e01               lda     286
+    \ 000009 6b                   rtl
+    \ 000000                      .section farcode,text
+    \ 000000          `?L276`:
+    \ 000000 22......             jsl     long:printf
+    \ 000004 a90000               lda     ##0
+    \ 000007 6b                   rtl
+    \ 000000                      .section cdata,rodata
+    \ 000000                      .pubweak `_StringLiteral_[49,48,32,70,108,111,111,100,32,70,105,108,108,101,100,32,67,105,114,99,108,101,115,46,46,46,10,13]`
+    \ 000000          `_StringLiteral_[49,48,32,70,108,111,111,100,32,70,105,108,108,101,100,32,67,105,114,99,108,101,115,46,46,46,10,13]`:
+    \ 000000 31302046             .byte   49,48,32,70,108,111,111,100,32,70,105,108,108,101,100,32,67,105,114,99,108,101,115,46,46,46,10,13,0
+    \ 000004 6c6f6f64
+    \ 000008 2046696c
+    \ 00000c 6c656420
+    \ 000010 43697263
+    \ 000014 6c65732e
+    \ 000018 2e2e0a0d
+    \ 00001c 00
+    \ 000000                      .section cdata,rodata
+    \ 000000                      .pubweak `_StringLiteral_[49,48,48,32,66,101,122,105,101,114,32,76,105,110,101,115,46,46,46,10,13]`
+    \ 000000          `_StringLiteral_[49,48,48,32,66,101,122,105,101,114,32,76,105,110,101,115,46,46,46,10,13]`:
+    \ 000000 31303020             .byte   49,48,48,32,66,101,122,105,101,114,32,76,105,110,101,115,46,46,46,10,13,0
+    \ 000004 42657a69
+    \ 000008 6572204c
+    \ 00000c 696e6573
+    \ 000010 2e2e2e0a
+    \ 000014 0d00
+    \ 000000                      .section cdata,rodata
+    \ 000000                      .pubweak `_StringLiteral_[50,48,48,32,76,105,110,101,115,46,46,46,10,13]`
+    \ 000000          `_StringLiteral_[50,48,48,32,76,105,110,101,115,46,46,46,10,13]`:
+    \ 000000 32303020             .byte   50,48,48,32,76,105,110,101,115,46,46,46,10,13,0
+    \ 000004 4c696e65
+    \ 000008 732e2e2e
+    \ 00000c 0a0d00
+    \ 000000                      .section cdata,rodata
+    \ 000000                      .pubweak `_StringLiteral_[51,48,32,83,111,108,105,100,32,69,108,108,105,112,115,101,115,46,46,46,32,10,13]`
+    \ 000000          `_StringLiteral_[51,48,32,83,111,108,105,100,32,69,108,108,105,112,115,101,115,46,46,46,32,10,13]`:
+    \ 000000 33302053             .byte   51,48,32,83,111,108,105,100,32,69,108,108,105,112,115,101,115,46,46,46,32,10,13,0
+    \ 000004 6f6c6964
+    \ 000008 20456c6c
+    \ 00000c 69707365
+    \ 000010 732e2e2e
+    \ 000014 200a0d00
+    \ 000000                      .section cdata,rodata
+    \ 000000                      .pubweak `_StringLiteral_[51,48,32,83,111,108,105,100,32,99,105,114,99,108,101,115,46,46,46,32,10,13]`
+    \ 000000          `_StringLiteral_[51,48,32,83,111,108,105,100,32,99,105,114,99,108,101,115,46,46,46,32,10,13]`:
+    \ 000000 33302053             .byte   51,48,32,83,111,108,105,100,32,99,105,114,99,108,101,115,46,46,46,32,10,13,0
+    \ 000004 6f6c6964
+    \ 000008 20636972
+    \ 00000c 636c6573
+    \ 000010 2e2e2e20
+    \ 000014 0a0d00
+    \ 000000                      .section cdata,rodata
+    \ 000000                      .pubweak `_StringLiteral_[51,48,48,32,83,111,108,105,100,32,82,101,99,116,97,110,103,108,101,115,46,46,46,10,13]`
+    \ 000000          `_StringLiteral_[51,48,48,32,83,111,108,105,100,32,82,101,99,116,97,110,103,108,101,115,46,46,46,10,13]`:
+    \ 000000 33303020             .byte   51,48,48,32,83,111,108,105,100,32,82,101,99,116,97,110,103,108,101,115,46,46,46,10,13,0
+    \ 000004 536f6c69
+    \ 000008 64205265
+    \ 00000c 6374616e
+    \ 000010 676c6573
+    \ 000014 2e2e2e0a
+    \ 000018 0d00
+    \ 000000                      .section cdata,rodata
+    \ 000000                      .pubweak `_StringLiteral_[53,48,32,67,105,114,99,108,101,115,46,46,46,10,13]`
+    \ 000000          `_StringLiteral_[53,48,32,67,105,114,99,108,101,115,46,46,46,10,13]`:
+    \ 000000 35302043             .byte   53,48,32,67,105,114,99,108,101,115,46,46,46,10,13,0
+    \ 000004 6972636c
+    \ 000008 65732e2e
+    \ 00000c 2e0a0d00
+    \ 000000                      .section cdata,rodata
+    \ 000000                      .pubweak `_StringLiteral_[53,48,32,69,108,108,105,112,115,101,115,46,46,46,10,13]`
+    \ 000000          `_StringLiteral_[53,48,32,69,108,108,105,112,115,101,115,46,46,46,10,13]`:
+    \ 000000 35302045             .byte   53,48,32,69,108,108,105,112,115,101,115,46,46,46,10,13,0
+    \ 000004 6c6c6970
+    \ 000008 7365732e
+    \ 00000c 2e2e0a0d
+    \ 000010 00
+    \ 000000                      .section cdata,rodata
+    \ 000000                      .pubweak `_StringLiteral_[53,48,32,82,101,99,116,97,110,103,108,101,115,46,46,46,10,13]`
+    \ 000000          `_StringLiteral_[53,48,32,82,101,99,116,97,110,103,108,101,115,46,46,46,10,13]`:
+    \ 000000 35302052             .byte   53,48,32,82,101,99,116,97,110,103,108,101,115,46,46,46,10,13,0
+    \ 000004 65637461
+    \ 000008 6e676c65
+    \ 00000c 732e2e2e
+    \ 000010 0a0d00
+    \ 000000                      .section cdata,rodata
+    \ 000000                      .pubweak `_StringLiteral_Error %d while setting VideoMode`
+    \ 000000          `_StringLiteral_Error %d while setting VideoMode`:
+    \ 000000 4572726f             .byte   69,114,114,111,114,32,37,100,32,119,104,105,108,101,32,115,101,116,116,105,110,103,32,86,105,100,101,111,77,111,100,101,0
+    \ 000004 72202564
+    \ 000008 20776869
+    \ 00000c 6c652073
+    \ 000010 65747469
+    \ 000014 6e672056
+    \ 000018 6964656f
+    \ 00001c 4d6f6465
+    \ 000020 00
+    \ 000000                      .section cdata,rodata
+    \ 000000                      .pubweak `_StringLiteral_Error %d while setting bitmap`
+    \ 000000          `_StringLiteral_Error %d while setting bitmap`:
+    \ 000000 4572726f             .byte   69,114,114,111,114,32,37,100,32,119,104,105,108,101,32,115,101,116,116,105,110,103,32,98,105,116,109,97,112,0
+    \ 000004 72202564
+    \ 000008 20776869
+    \ 00000c 6c652073
+    \ 000010 65747469
+    \ 000014 6e672062
+    \ 000018 69746d61
+    \ 00001c 7000
+    \ 000000                      .section cdata,rodata
+    \ 000000                      .pubweak `_StringLiteral_[80,97,108,101,116,116,101,32,84,101,115,116,46,46,46,13]`
+    \ 000000          `_StringLiteral_[80,97,108,101,116,116,101,32,84,101,115,116,46,46,46,13]`:
+    \ 000000 50616c65             .byte   80,97,108,101,116,116,101,32,84,101,115,116,46,46,46,13,0
+    \ 000004 74746520
+    \ 000008 54657374
+    \ 00000c 2e2e2e0d
+    \ 000010 00
+    \ 000000                      .section cdata,rodata
+    \ 000000                      .pubweak `_StringLiteral_[84,104,120,32,102,111,114,32,119,97,116,99,104,105,110,103,32,116,104,105,115,32,100,101,109,111,10,13]`
+    \ 000000          `_StringLiteral_[84,104,120,32,102,111,114,32,119,97,116,99,104,105,110,103,32,116,104,105,115,32,100,101,109,111,10,13]`:
+    \ 000000 54687820             .byte   84,104,120,32,102,111,114,32,119,97,116,99,104,105,110,103,32,116,104,105,115,32,100,101,109,111,10,13,0
+    \ 000004 666f7220
+    \ 000008 77617463
+    \ 00000c 68696e67
+    \ 000010 20746869
+    \ 000014 73206465
+    \ 000018 6d6f0a0d
+    \ 00001c 00
+
+##########################
+#                        #
+# Memory sizes (decimal) #
+#                        #
+##########################
+
+Executable  (Text): 2444 bytes
+Constant          :  300 bytes

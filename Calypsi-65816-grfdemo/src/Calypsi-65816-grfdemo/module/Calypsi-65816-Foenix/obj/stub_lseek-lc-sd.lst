@@ -1,0 +1,39 @@
+###############################################################################
+#                                                                             #
+# Calypsi ISO C compiler for 65816                              version 3.6.2 #
+#                                                       06/Jul/2022  22:39:43 #
+# Command line: --core=65816 --target=Foenix --code-model=large               #
+#               --data-model=small --debug -Iinclude                          #
+#               --list-file=obj/stub_lseek-lc-sd.lst -o                       #
+#               obj/stub_lseek-lc-sd.o src/stub_lseek.c                       #
+#                                                                             #
+###############################################################################
+
+    \ 000000                      .rtmodel version,"1"
+    \ 000000                      .rtmodel codeModel,"large"
+    \ 000000                      .rtmodel dataModel,"small"
+    \ 000000                      .rtmodel core,"65816"
+    \ 000000                      .rtmodel huge,"0"
+    \ 000000                      .rtmodel doubleSize,"32"
+    \ 000000                      .rtmodel target,"foenix"
+    \ 000000                      .extern _Dp
+    \ 000000                      .extern _Vfp
+0001                  #include <stdio.h>
+0002
+0003                  long _Stub_lseek (int fd, long offset, int whence) {
+    \ 000000                      .section farcode,text
+    \ 000000                      .public _Stub_lseek
+    \ 000000          _Stub_lseek:
+0004                    return -1;
+    \ 000000 a9ffff               lda     ##65535
+    \ 000003 a2ffff               ldx     ##65535
+0005                  }
+    \ 000006 6b                   rtl
+
+##########################
+#                        #
+# Memory sizes (decimal) #
+#                        #
+##########################
+
+Executable  (Text): 7 bytes

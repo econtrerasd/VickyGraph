@@ -1,0 +1,117 @@
+###############################################################################
+#                                                                             #
+# Calypsi ISO C compiler for 65816                              version 3.6.2 #
+#                                                       06/Jul/2022  22:39:43 #
+# Command line: --core=65816 --target=Foenix --code-model=large               #
+#               --data-model=small --debug -Iinclude                          #
+#               --list-file=obj/stub_write-lc-sd.lst -o                       #
+#               obj/stub_write-lc-sd.o src/stub_write.c                       #
+#                                                                             #
+###############################################################################
+
+    \ 000000                      .rtmodel version,"1"
+    \ 000000                      .rtmodel codeModel,"large"
+    \ 000000                      .rtmodel dataModel,"small"
+    \ 000000                      .rtmodel core,"65816"
+    \ 000000                      .rtmodel huge,"0"
+    \ 000000                      .rtmodel doubleSize,"32"
+    \ 000000                      .rtmodel target,"foenix"
+    \ 000000                      .extern _Dp
+    \ 000000                      .extern _Stub_putchar
+    \ 000000                      .extern _Vfp
+    \ 000000                      .extern errno
+0001                  #include <errno.h>
+0002                  #include <sys/types.h>
+0003                  #include <stubs.h>
+0004
+0005                  // Can call kernel directly in large code model only.
+0006                  #ifdef __CALYPSI_DATA_MODEL_SMALL__
+0007                  #define CHROUT(c) _Stub_putchar(c)
+0008                  #else
+0009                  #define CHROUT(c) ( (void (*)(char) ) 0x1018) (c)
+0010                  #endif
+0011
+0012                  size_t _Stub_write (int fd, const void *buf, size_t count) {
+    \ 000000                      .section farcode,text
+    \ 000000                      .public _Stub_write
+    \ 000000          _Stub_write:
+    \ 000000 5a                   phy
+    \ 000001 5a                   phy
+    \ 000002 5a                   phy
+    \ 000003 5a                   phy
+    \ 000004 aa                   tax
+0013                    const char *p = buf;
+    \ 000005 a5..                 lda     dp:.tiny _Dp
+    \ 000007 8301                 sta     1,s
+0014                    size_t n = 0;
+    \ 000009 a90000               lda     ##0
+    \ 00000c 8303                 sta     3,s
+0015
+0016                    switch (fd) {
+    \ 00000e e00100               cpx     ##1
+    \ 000011 f00b                 beq     `?L7`
+0017                    case 1: {
+0018                      char c;
+0019                      while (count) {
+0020                        CHROUT(*p);
+0021                        n += 1;
+0022                        p += 1;
+0023                        count -= 1;
+0024                      }
+0025                      break;
+0026                      }
+0027                    default:
+0028                      __set_errno(EBADF);
+    \ 000013 a20900               ldx     ##9
+    \ 000016 8e....               stx     errno
+0029                      return (size_t) -1;
+    \ 000019 a9ffff               lda     ##-1
+    \ 00001c 803b                 bra     `?L3`
+    \ 00001e          `?L7`:
+    \ 00001e a5..                 lda     dp:.tiny (_Dp+2)
+    \ 000020 8307                 sta     7,s
+    \ 000022 a301                 lda     1,s
+    \ 000024 8305                 sta     5,s
+    \ 000026 a303                 lda     3,s
+    \ 000028 8301                 sta     1,s
+    \ 00002a a307     `?L8`:      lda     7,s
+    \ 00002c f029                 beq     `?L9`
+    \ 00002e a00000               ldy     ##0
+    \ 000031 b305                 lda     (5,s),y
+    \ 000033 29ff00               and     ##255
+    \ 000036 22......             jsl     long:_Stub_putchar
+    \ 00003a a301                 lda     1,s
+    \ 00003c 1a                   inc     a
+    \ 00003d 8301                 sta     1,s
+    \ 00003f a305                 lda     5,s
+    \ 000041 1a                   inc     a
+    \ 000042 8303                 sta     3,s
+    \ 000044 a307                 lda     7,s
+    \ 000046 3a                   dec     a
+    \ 000047 8305                 sta     5,s
+    \ 000049 a305                 lda     5,s
+    \ 00004b 8307                 sta     7,s
+    \ 00004d a303                 lda     3,s
+    \ 00004f 8305                 sta     5,s
+    \ 000051 a301                 lda     1,s
+    \ 000053 8301                 sta     1,s
+    \ 000055 80d3                 bra     `?L8`
+    \ 000057          `?L9`:
+0030                    }
+0031                    return n;
+    \ 000057 a301                 lda     1,s
+    \ 000059          `?L3`:
+0032                  }
+    \ 000059 7a                   ply
+    \ 00005a 7a                   ply
+    \ 00005b 7a                   ply
+    \ 00005c 7a                   ply
+    \ 00005d 6b                   rtl
+
+##########################
+#                        #
+# Memory sizes (decimal) #
+#                        #
+##########################
+
+Executable  (Text): 94 bytes

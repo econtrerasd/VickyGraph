@@ -1,0 +1,28 @@
+###############################################################################
+#                                                                             #
+# Calypsi assembler for 65816                                   version 3.6.2 #
+#                                                       06/Jul/2022  22:39:43 #
+# Command line: --debug --core=65816 --target=Foenix --code-model=large       #
+#               --data-model=small --list-file=obj/dma-lc-sd.lst -o           #
+#               obj/dma-lc-sd.o src/dma.s                                     #
+#                                                                             #
+###############################################################################
+
+0001                  #include "macros.h"
+0002
+0003                                .section code
+0004                                .public DMA_wait_delay
+0005                  DMA_wait_delay:                     ; 6 cycles jsr
+0006  000000 ea                     nop                   ; 4 cycles
+0007  000001 ea                     nop
+0008                                return                ; 6 cycles rts
+    \ 000002 6b                   rtl
+0009                                                      ; 16 cycles total
+
+##########################
+#                        #
+# Memory sizes (decimal) #
+#                        #
+##########################
+
+Executable  (Text): 3 bytes
