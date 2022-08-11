@@ -43,6 +43,17 @@
 #define BORDER_X_SIZE            (*(volatile __far uint8_t *)0xaf0008)  // X-  values: 0 - 32 (default: 32)
 #define BORDER_Y_SIZE            (*(volatile __far uint8_t *)0xaf0009)  // Y- values 0 -32 (default: 32)
 
+// LUT Palette Defines
+#define GRPH_LUT0_LONG           ((volatile __far uint8_t *)0xaf2000)
+#define GRPH_LUT1_LONG           ((volatile __far uint8_t *)0xaf2400)
+#define GRPH_LUT2_LONG           ((volatile __far uint8_t *)0xaf2800)
+#define GRPH_LUT3_LONG           ((volatile __far uint8_t *)0xaf2c00)
+#define GRPH_LUT4_LONG           ((volatile __far uint8_t *)0xaf3000)
+#define GRPH_LUT5_LONG           ((volatile __far uint8_t *)0xaf3400)
+#define GRPH_LUT6_LONG           ((volatile __far uint8_t *)0xaf3800)
+#define GRPH_LUT7_LONG           ((volatile __far uint8_t *)0xaf3c00)
+
+
 // ----------------------
 // Minimal ANSI APIs
 // ----------------------
@@ -55,8 +66,10 @@ void ANSILocate(int row,int col);
 // ----------------------
 int vickyVideomode (bool text,bool txtOverlay,bool bitmap,bool tiles,bool sprites,bool gammaFix,bool videoOff,int resolution);
 int vickyBitmap(int page, bool enable, long address, int lut, bool collision);
-int setVickyBorder(bool show, uint8_t x, uint8_t y);
-int setBorderColor(uint8_t red, uint8_t green, uint8_t blue);
+int vickyPaletteCol (uint8_t palette, uint8_t index, uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha);
+int vickyBackCol (uint8_t palette, uint8_t index, uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha);
+int vickyBorderCol (uint8_t palette, uint8_t index, uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha);
+void vickyDefPalette ();
 
 // ----------------------
 // Graphics Primitives
@@ -72,10 +85,15 @@ void plot_ellipse(int xc, int yc, double a, double b, uint8_t col);
 void plot_solid_rectangle  (int x0, int y0, int x1, int y1, uint8_t col);
 void plot_solid_circle(int xc,int yc, int r, uint8_t col);
 void plot_solid_ellipse(int xc, int yc, double a, double b, uint8_t col);
-int  getPixel (int x, int y);
+void plot_arc( int x_cen, int y_cen, int rad, int start_ang, int end_ang, uint8_t col);
 void floodFill(int x, int y, uint8_t newColor);
+
+// Reading Graphic screen 
 int  read_vram_buffer (uint8_t volatile __far *p, int length, uint8_t __far * buffer);
+int  getPixel (int x, int y);
 int  getScanLine (int y, uint8_t __far * buffer);
+
+// Experimental!!!
 void vram2dram_linearCopy ( long source, int __far *buffer, long length); // Experimental (more like non working!), the universe might colapse unto itself if you invoke this!!
 
 // ---------------------------
@@ -89,7 +107,7 @@ bool stackPop(int *x, int *y);
 bool stackPush(int x, int y);
 
 // Math functions (used for spline)
-float pow(float value,int power);
+float fast_pow(float value,int power);
 
 
 

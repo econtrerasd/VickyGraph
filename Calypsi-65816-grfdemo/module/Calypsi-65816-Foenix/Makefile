@@ -4,8 +4,8 @@ VPATH = src
 ALL_LIBS = Foenix-lc-sd.a Foenix-lc-md.a
 
 # Common source files
-ASM_SRCS = Foenix-startup.s stub_exit.s  stub_putchar.s dma.s
-C_SRCS = stub_write.c stub_lseek.c stub_close.c vram_copy.c vram_fill.c vdma_wait.c
+ASM_SRCS = Foenix-startup.s stub_exit.s  stub_putchar.s dma.s stub_puts.s 
+C_SRCS =  stub_lseek.c stub_write.c stub_close.c vram_copy.c vram_fill.c vdma_wait.c
 
 # Object files
 OBJS_LC_SD = $(ASM_SRCS:%.s=%-lc-sd.o) $(C_SRCS:%.c=%-lc-sd.o)
@@ -30,7 +30,6 @@ Foenix-lc-sd.a: $(OBJS_LC_SD)
 
 Foenix-lc-md.a: $(OBJS_LC_MD)
 	(cd obj && nlib ../$@ $^)
-
 
 clean:
 	-(cd obj && del $(OBJS_LC_SD) $(OBJS_LC_SD:%.o=%.lst))

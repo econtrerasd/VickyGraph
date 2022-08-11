@@ -10,7 +10,7 @@
 #include <string.h>
 #include <dma.h>
 #include <time.h>
-//#include <math.h>
+#include <math.h>
 #include "support.h"
 #include "vickyGraph.h"
 
@@ -38,28 +38,45 @@ int main ()
   int yRndMid2;
   int yRndEnd;
   int colRnd;
-  int c;
+  int c,d,e;
   char option;
   ANSIClrScr();
 
-	if (setupScreen(0)==0)
+	if (setupScreen(1)==0)
 	{
 		ANSIClrScr();
 		clrBitmap();
+	   /*
 		c=time(NULL);
-		srand(c); 
-		printf("Time %d\r",c);
-		shake(200);
+		srand(c); */
+		for (c=1;c<=90;c++)
+		{
+			printf ("sin (%d)=%f\r",c,sin(c));
+		}
+		
+		//plot_arc(100,100,20, 90,180,128);
+		
 		/*
-		printf("30000 Pixels...\r");
-		 for (c=0;c<=30000;c++)
-		  {
-			xRndInit=rand() % (int)vickyResX;
-			yRndInit=rand() % (int)vickyResY;
-			colRnd=rand() % 255;
-			plot (xRndInit, yRndInit, colRnd);
-		  } 
-		  shake(20);
+		printf("Palette Test...\r");
+		 for (e=1;e<=5;e++)
+		 {
+			if (e!=5)
+			// randomize palette
+			{
+				for (c=0;c<=255;c++)
+				{
+					vickyPaletteCol (0, c, rand() % 255, rand() % 255, rand() % 255, 255);
+				}
+			}
+			else 
+				vickyDefPalette();		
+			// paint pixel color bar
+			for (c=0;c<=255;c++)
+			{
+				for (d=0;d<20;d++)
+					plot (c+50, d+(e*50), c);
+			} 
+		 }
 		  clrBitmap();
 		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
 		  ANSILocate(1,1);
@@ -180,7 +197,6 @@ int main ()
 		  ANSIClrScr();           // Clear Text screen after switching resolution (for sanity!)
 		  ANSILocate(1,1);
 		  printf("10 Flood Filled Circles...\n\r");
-		  srand(time(NULL)); 
 		  for (c=0;c<=10;c++)
 		  {
 			xRndInit=rand() % (int)vickyResX;
@@ -201,8 +217,6 @@ int main ()
   } // screen
   else {return -1;}
 }
-
-
 
 // ----------------------------------------
 // Helper functions 
@@ -239,31 +253,6 @@ int setupScreen(int mode)
 		printf ("Error %d while setting VideoMode",status);
 		return status;
 	} //Error setting videomode
-}
-
-// ----------------------------------------
-// Shake Screen
-// Uses Smooth scrolling registers to Shake screen!
-// Ernesto Contreras
-// ----------------------------------------
-
-void shake(int repetitions)
-{
-	// bits 4-6 of BORDER CONTROL REGISTER CONTROL SMOOTH SCROLLING
-	int c, loop;
-	for (loop=0;loop<repetitions;loop++)
-	{
-		for (c=0;c<8;c++)
-		{
-			BORDER_CTRL_REG = (BORDER_CTRL_REG & 1) + c*16;
-			delay(60);
-		}
-		for (c=7;c>=0;c--)
-		{
-			BORDER_CTRL_REG = (BORDER_CTRL_REG & 1) + c*16;
-			delay(60);
-		}
-	}
 }
 
 // ----------------------------------------
